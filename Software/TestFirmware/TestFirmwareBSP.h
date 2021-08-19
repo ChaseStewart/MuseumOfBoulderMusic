@@ -1,5 +1,5 @@
 /******************************************************* 
- *  File: TeensyBSP.h
+ *  File: TestFirmwareBSP.h
  *    
  *  Author: Chase E. Stewart
  *  For Hidden Layer Design
@@ -11,6 +11,10 @@
 #define __TEST_FW_BSP_H__
 
 #include "Arduino.h"
+#include "Preferences.h"
+
+/* Just a documentation macro for analog vs digital pins */
+#define ANALOG_READ(x) (x)
 
 /**
  * Silence all printouts if not in DEBUG
@@ -35,15 +39,16 @@
 
 #define SCB_AIRCR (*(volatile uint32_t *)0xE000ED0C) // Application Interrupt and Reset Control location for Teensy
 
-//#define ULTRASONIC_PING // uncomment if using Parallax Ping ultrasonic Sensor
-#define INVERT_ROT_POT // uncomment if the rotary encoder turns the wrong way
-
-/* Teensy layout constants */
+/* Teensy pinout constants */
 #define TEST_FW_JOYSTICK_RIGHT 0
 #define TEST_FW_JOYSTICK_LEFT 1
 #define TEST_FW_JOYSTICK_UP 2
 #define TEST_FW_JOYSTICK_DOWN 3
 #define TEST_FW_BUTTON_1 4
 #define TEST_FW_BUTTON_2 5
+#define TEST_FW_BUTTON_3 6
+#define TEST_FW_ULTRA_SENS 8
+#define TEST_FW_ULTRA_TRIG 9
+#define TEST_FW_LIN_POT ANALOG_READ(0) // ANALOG 0, pin 14
 
 #endif /* __TEST_FW_BSP_H__ */
