@@ -5,7 +5,7 @@ Repository to hold work for the music installation for Museum of Boulder Oct 202
 [Chase E. Stewart](https://chasestewart.co) for [Hidden Layer Design](https://hiddenlayerdesign.com)
 
 # Repository Layout
-`/Software/TestFirmware/...` - Basic Teensy firmware that can take input from a superset of all involved sensors and then use these to generate MIDI over USB in a few basic ways
+`/Software/TestFirmware/...` - Basic Teensy firmware that can take input from a superset of all involved sensors and just print the status of these sensors over serial. It also compiles with the TeensyMIDI library and does a sort of minimal no-op involving MIDI (it reads inbound MIDI messages in the loop).
 
 
 ## Setup Instructions
