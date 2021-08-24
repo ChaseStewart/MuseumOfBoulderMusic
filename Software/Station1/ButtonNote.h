@@ -21,7 +21,8 @@ enum buttonNoteId
   BUTTON_1 = 1,
   BUTTON_2 = 2,
   BUTTON_3 = 3,
-  BUTTON_LIMIT = 3
+  BUTTON_4 = 4,
+  BUTTON_LIMIT = 4
 };
 
 class ButtonNote
@@ -32,7 +33,7 @@ class ButtonNote
     bool GetReading(void);
     void SendNote(int int_note, int analog_volume, config_t in_config);
     void CheckMIDINeedsUpdate(void);
-    bool ShouldSendNote(void);
+    bool ShouldSendNote(int curr_note_ofst, int curr_volume);
 
     int previous_note;
     int current_note;
@@ -46,6 +47,8 @@ class ButtonNote
     int button_note_array[BUTTON_NOTE_ARRAY_LEN];
     int array_idx;
     int current_reading;
+    int prev_note_ofst;
+    int prev_volume;
 };
 
 #endif /* __BUTTON_NOTE_H__ */

@@ -20,6 +20,9 @@
 
 #define BUTTON_NOTE_DEBOUNCE_DELAY 10
 
+#define JOYSTICK_MSEC_PER_NOTE 300
+
+#define LIN_POT_MIN_READING 20
 /**
  * Enumeration of the various 
  */
@@ -43,7 +46,9 @@ typedef struct
   uint8_t button1_offset;
   uint8_t button2_offset;
   uint8_t button3_offset;
+  uint8_t button4_offset;
   uint8_t octave;
+  uint8_t control_code;
   uint8_t MIDI_Channel;
 } config_t;
 

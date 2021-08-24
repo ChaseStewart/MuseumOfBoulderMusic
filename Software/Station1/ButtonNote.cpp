@@ -1,4 +1,4 @@
-/******************************************************* Pr
+/*******************************************************
  *  File: ButtonNote.cpp
  *    
  *  Author: Chase E. Stewart
@@ -34,6 +34,10 @@ static int getScaledNote(int ofst, buttonNoteId id, config_t in_config)
       break;
 
     case BUTTON_3:
+      delta = ofst + in_config.button3_offset;
+      break;
+
+    case BUTTON_4:
       delta = ofst + in_config.button3_offset;
       break;
       
@@ -76,6 +80,7 @@ ButtonNote::ButtonNote(int pin, buttonNoteId id)
   current_reading = LOW;
   midi_needs_update= true;
   update_midi_msec = 0;
+  prev_note_ofst = 0;
 
   for (int i=0; i<BUTTON_NOTE_ARRAY_LEN; i++)
   {
@@ -124,15 +129,30 @@ void ButtonNote::SendNote(int ofst, int analog_volume, config_t in_config)
 {
   current_note = getScaledNote(ofst, _id, in_config);
   usbMIDI.sendNoteOff(previous_note, 0, in_config.MIDI_Channel);   
-  usbMIDI.sendNoteOn(current_note, 100, in_config.MIDI_Channel);
+  usbMIDI.sendNoteOn(current_note, analog_volume, in_config.MIDI_Channel);
   update_midi_msec  = millis() + BUTTON_NOTE_DEBOUNCE_DELAY;
   midi_needs_update = false;
   previous_note = current_note;  
 }
 
-bool ButtonNote::ShouldSendNote(void)
+bool ButtonNote::ShouldSendNote(int curr_note_ofst, int curr_volume)
 {
-  return (GetReading() && 
-          midi_needs_update && 
-          millis() > update_midi_msec);
+  if (curr_note_ofst != prev_note_ofst)
+  {
+    prev_note_ofst = curr_note_ofst;
+    return true;  
+  }
+  else if (curr_volume != prev_volume)
+  {
+    prev_volume = curr_volume;
+    return true;  
+  }
+  else
+  {
+    prev_volume = curr_volume;
+    prev_note_ofst = curr_note_ofst;
+    return (GetReading() && 
+            midi_needs_update && 
+            millis() > update_midi_msec);
+  }  
 }

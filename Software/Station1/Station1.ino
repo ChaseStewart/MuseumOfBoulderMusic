@@ -18,6 +18,7 @@
 #include "Nonvolatile.h"
 #include "Ultrasonic.h"
 #include "ButtonNote.h"
+#include "DiscreteJoystick.h"
 
 /* Globals */
 unsigned long ping_time;
@@ -27,13 +28,17 @@ unsigned long range_in_cm;
 int curr_bend_val = 1;
 int prev_bend_val = 0;
 int curr_note_ofst = 0;
-uint8_t analog_volume = 100;
+int analog_volume = 100;
+int lin_pot_reading = 0;
+int lin_pot_cc_val = 0;
 
-ButtonNote ButtonNote0(STATION1_BUTTON_1, BUTTON_0);
+ButtonNote ButtonNote0(STATION1_BUTTON_3, BUTTON_0);
 ButtonNote ButtonNote1(STATION1_BUTTON_2, BUTTON_1);
-ButtonNote ButtonNote2(STATION1_BUTTON_3, BUTTON_2);
-NewPing ultrasonic(STATION1_ULTRA_TRIG, STATION1_ULTRA_SENS, ULTRA_MAX_CM);
+ButtonNote ButtonNote2(STATION1_BUTTON_1, BUTTON_2);
 config_t in_config;
+
+NewPing ultrasonic(STATION1_ULTRA_TRIG, STATION1_ULTRA_SENS, ULTRA_MAX_CM);
+DiscreteJoystick joystick(STATION1_JOYSTICK_UP, STATION1_JOYSTICK_DOWN, STATION1_JOYSTICK_LEFT, STATION1_JOYSTICK_RIGHT);
 
 /* Prototypes */
 static void pingCheck(void);
@@ -62,6 +67,8 @@ void setup()
   in_config.button1_offset = 5;
   in_config.button2_offset = 7;
   in_config.button3_offset = 12;
+  in_config.button4_offset = 24;
+  in_config.control_code = 16;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_MIDI_CHANNEL_ADDR);
   
 #ifdef DEBUG
@@ -96,7 +103,8 @@ void loop()
     prev_bend_val = curr_bend_val;
   }
 
-  
+  joystick.UpdateNote(&curr_note_ofst);
+  joystick.UpdateVolume(&analog_volume);
 
   /* Send note on debounced rising edge of TEENSY_CAP_TOUCH1_PIN */
   ButtonNote0.Update();
@@ -104,17 +112,28 @@ void loop()
   ButtonNote2.Update();
   
   /* send notes if needed */
-  if (ButtonNote0.ShouldSendNote()) 
+  if (ButtonNote0.ShouldSendNote(curr_note_ofst, analog_volume)) 
     ButtonNote0.SendNote(curr_note_ofst, analog_volume, in_config);
-  if (ButtonNote1.ShouldSendNote()) 
+  if (ButtonNote1.ShouldSendNote(curr_note_ofst, analog_volume)) 
     ButtonNote1.SendNote(curr_note_ofst, analog_volume, in_config);
-  if (ButtonNote2.ShouldSendNote())
+  if (ButtonNote2.ShouldSendNote(curr_note_ofst, analog_volume))
     ButtonNote2.SendNote(curr_note_ofst, analog_volume, in_config);
   
   /* Consider CapTouch sensors as triggered if any of last CAP_TOUCH_ARRAY_LEN samples were high */
   ButtonNote0.CheckMIDINeedsUpdate();
   ButtonNote1.CheckMIDINeedsUpdate();
   ButtonNote2.CheckMIDINeedsUpdate();
+
+  lin_pot_reading = analogRead(STATION1_LIN_POT);
+  lin_pot_reading = constrain(lin_pot_reading, 0, 1024); 
+
+  lin_pot_cc_val  = floor((1024 - lin_pot_reading) * 128.0/1024.0);
+
+  if (lin_pot_reading > LIN_POT_MIN_READING)
+  {
+    usbMIDI.sendControlChange(in_config.control_code, lin_pot_cc_val, in_config.MIDI_Channel);
+  }
+
 
   /* Flush any queued messages */
   usbMIDI.send_now();
