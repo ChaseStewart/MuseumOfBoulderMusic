@@ -15,7 +15,7 @@
 
 
 
-DiscreteJoystick::DiscreteJoystick(uint8_t upPin, uint8_t downPin, uint8_t leftPin, uint8_t rightPin)
+DiscreteJoystick::DiscreteJoystick(uint8_t upPin, uint8_t downPin, uint8_t leftPin, uint8_t rightPin, int xAxis_cc, int yAxis_cc)
 {
   _upPin = upPin;
   _downPin = downPin;
@@ -27,13 +27,15 @@ DiscreteJoystick::DiscreteJoystick(uint8_t upPin, uint8_t downPin, uint8_t leftP
   wasYDirectionHeld = false;
   isYDirectionHeld = false;
   holdYStartMillis = 0;
+  _xAxisCC = xAxis_cc;
+  _yAxisCC = yAxis_cc;
+  xAxisVal = 50;
+  yAxisVal = 50;
 }
 
 
-void DiscreteJoystick::UpdateNote(int *scaleNote)
+void DiscreteJoystick::UpdateXAxis(config_t in_config)
 {
-  if (!scaleNote) return;
-
   upPressed    = !digitalRead(_upPin);
   downPressed  = !digitalRead(_downPin);
     
@@ -49,8 +51,9 @@ void DiscreteJoystick::UpdateNote(int *scaleNote)
   {
     if ((millis() - holdXStartMillis) > JOYSTICK_MSEC_PER_NOTE)
     {
-      *scaleNote = (JOY_DOWN == currentXDirection) ? *scaleNote - 1 : *scaleNote + 1;
-      *scaleNote = constrain(*scaleNote, 0, 50);
+      xAxisVal = (JOY_DOWN == currentXDirection) ? xAxisVal - 10 : xAxisVal + 10;
+      xAxisVal = constrain(xAxisVal, 0, 127);
+      usbMIDI.sendControlChange(_xAxisCC, xAxisVal, in_config.MIDI_Channel);   
       holdXStartMillis = millis();
     }
 
@@ -63,10 +66,8 @@ void DiscreteJoystick::UpdateNote(int *scaleNote)
   wasXDirectionHeld = isXDirectionHeld;
 }
 
-void DiscreteJoystick::UpdateVolume(int *scaleVolume)
+void DiscreteJoystick::UpdateYAxis(config_t in_config)
 {
-  if (!scaleVolume) return;
-
   leftPressed    = !digitalRead(_leftPin);
   rightPressed  = !digitalRead(_rightPin);
     
@@ -82,8 +83,9 @@ void DiscreteJoystick::UpdateVolume(int *scaleVolume)
   {
     if ((millis() - holdYStartMillis) > JOYSTICK_MSEC_PER_NOTE)
     {
-      *scaleVolume = (JOY_LEFT == currentYDirection) ? *scaleVolume - 10 : *scaleVolume + 10;
-      *scaleVolume = constrain(*scaleVolume, 0, 127);
+      yAxisVal = (JOY_LEFT == currentYDirection) ? yAxisVal - 10 : yAxisVal + 10;
+      yAxisVal = constrain(yAxisVal, 0, 127);
+      usbMIDI.sendControlChange(_yAxisCC, yAxisVal, in_config.MIDI_Channel);
       holdYStartMillis = millis();
     }
 

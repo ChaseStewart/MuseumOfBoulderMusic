@@ -13,7 +13,7 @@
 #include "Preferences.h"
 #include "Nonvolatile.h"
 
-#define BUTTON_NOTE_ARRAY_LEN 2
+#define BUTTON_NOTE_ARRAY_LEN 10
 
 enum buttonNoteId 
 {
@@ -28,27 +28,27 @@ enum buttonNoteId
 class ButtonNote
 {
   public:
-    ButtonNote(int pin, buttonNoteId id);
-    void Update(void);
+    ButtonNote(int pin, int cc_parameter, buttonNoteId id, bool isToggleNotMomentary);
+    void Update(config_t in_config);
     bool GetReading(void);
-    void SendNote(int int_note, int analog_volume, config_t in_config);
+    void SendControlCode(config_t in_config);
     void CheckMIDINeedsUpdate(void);
-    bool ShouldSendNote(int curr_note_ofst, int curr_volume);
+    bool ShouldSendNote(void);
 
-    int previous_note;
-    int current_note;
     unsigned long update_midi_msec;
     bool midi_needs_update;
     unsigned long press_time;
     
   private:
     buttonNoteId _id;
+    bool toggle_state;
+    bool _isToggleNotMomentary;
     int _pin; // pin number of Arduino that is connected with SIG pin of Ultrasonic Ranger.
     int button_note_array[BUTTON_NOTE_ARRAY_LEN];
     int array_idx;
     int current_reading;
-    int prev_note_ofst;
-    int prev_volume;
+    int prev_midi_needs_update;
+    int _cc_parameter;
 };
 
 #endif /* __BUTTON_NOTE_H__ */

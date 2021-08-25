@@ -18,11 +18,13 @@
 
 #define MAX_PITCH_BEND_DELTA 1700
 
+#define MAX_ONEBYTE_PITCH_BEND_DELTA 10
+
 #define BUTTON_NOTE_DEBOUNCE_DELAY 10
 
 #define JOYSTICK_MSEC_PER_NOTE 300
 
-#define LIN_POT_MIN_READING 20
+#define LIN_POT_MIN_READING 10
 /**
  * Enumeration of the various 
  */

@@ -25,15 +25,19 @@ enum joystickDirectionId
 class DiscreteJoystick
 {
   public:
-    DiscreteJoystick(uint8_t upPin, uint8_t downPin, uint8_t leftPin, uint8_t rightPin);
-    void UpdateNote(int *scaleNote);
-    void UpdateVolume(int *scaleVolume);
+    DiscreteJoystick(uint8_t upPin, uint8_t downPin, uint8_t leftPin, uint8_t rightPin, int xAxis_cc, int yAxis_cc);
+    void UpdateXAxis(config_t in_config);
+    void UpdateYAxis(config_t in_config);
     
   private:
     int _upPin;
     int _downPin;
     int _leftPin;
     int _rightPin;
+    int _xAxisCC;
+    int _yAxisCC;
+    int xAxisVal;
+    int yAxisVal;
     bool upPressed;
     bool downPressed;
     bool leftPressed;

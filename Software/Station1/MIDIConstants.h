@@ -42,6 +42,16 @@ const int MIDI_CTRL_CHG_PITCHBEND  = 0xE0;
 const int MIDI_CTRL_CHG_MAX        = 0x7F;
 const int MIDI_CTRL_CHG_INVAL      = 0xFF;
 
+const int MIDI_GEN_PURPOSE_1 = 0x10;
+const int MIDI_GEN_PURPOSE_2 = 0x11;
+const int MIDI_GEN_PURPOSE_3 = 0x12;
+const int MIDI_GEN_PURPOSE_4 = 0x13;
+const int MIDI_GEN_PURPOSE_5 = 0x50;
+const int MIDI_GEN_PURPOSE_6 = 0x51;
+const int MIDI_GEN_PURPOSE_7 = 0x52;
+const int MIDI_GEN_PURPOSE_8 = 0x53;
+
+
 const int MIDI_OCTAVE_LEN  = 7;
 const int MIDI_NUM_OCTAVES = 4;
 const int MIDI_SCALE_LEN = 128;

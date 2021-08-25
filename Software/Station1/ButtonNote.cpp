@@ -12,67 +12,7 @@
 #include "MIDIConstants.h"
 #include "Station1BSP.h"
 
-/**
- * Static function to get note in MIDI scale from 
- */
-static int getScaledNote(int ofst, buttonNoteId id, config_t in_config)
-{
-  int delta;
-  
-  switch(id)
-  {
-    case BUTTON_0:
-      delta = ofst;
-      break;
-      
-    case BUTTON_1:
-      delta = ofst + in_config.button1_offset;
-      break;
-    
-    case BUTTON_2:
-      delta = ofst + in_config.button2_offset;
-      break;
-
-    case BUTTON_3:
-      delta = ofst + in_config.button3_offset;
-      break;
-
-    case BUTTON_4:
-      delta = ofst + in_config.button3_offset;
-      break;
-      
-    default:
-      digitalWrite(TEENSY_LED_PIN, HIGH);
-      return in_config.root_note; 
-  }
-  
-  if (in_config.scale == MOD_MAJOR)
-  {
-    return in_config.octave + in_config.root_note + MAJOR_DELTAS[delta];
-  }
-  else if (in_config.scale == MOD_MINOR)
-  {
-    return in_config.octave + in_config.root_note + MINOR_DELTAS[delta];
-  }
-  else if (in_config.scale == MOD_MIXOLYDIAN)
-  {
-    return in_config.octave + in_config.root_note + MIXOLYDIAN_DELTAS[delta];
-  }
-  else if (in_config.scale == MOD_DORIAN)
-  {
-    return in_config.octave + in_config.root_note + DORIAN_DELTAS[delta];
-  }
-  else if (in_config.scale == MOD_CHROMATIC)
-  {
-    return in_config.octave + in_config.root_note + CHROMATIC_DELTAS[delta];
-  }
-  else 
-  {  
-    return in_config.octave + in_config.root_note;
-  }
-}
-
-ButtonNote::ButtonNote(int pin, buttonNoteId id)
+ButtonNote::ButtonNote(int pin, int cc_parameter, buttonNoteId id, bool isToggleNotMomentary)
 {
   _id = id;
   _pin = pin;
@@ -80,7 +20,8 @@ ButtonNote::ButtonNote(int pin, buttonNoteId id)
   current_reading = LOW;
   midi_needs_update= true;
   update_midi_msec = 0;
-  prev_note_ofst = 0;
+  _cc_parameter = cc_parameter;
+  _isToggleNotMomentary = isToggleNotMomentary;
 
   for (int i=0; i<BUTTON_NOTE_ARRAY_LEN; i++)
   {
@@ -92,7 +33,7 @@ ButtonNote::ButtonNote(int pin, buttonNoteId id)
 /**
  * Capture the readout of the sensor, update the state variables
  */
-void ButtonNote::Update(void)
+void ButtonNote::Update(config_t in_config)
 {
   current_reading = digitalRead(_pin);
   if (current_reading && midi_needs_update)
@@ -102,14 +43,16 @@ void ButtonNote::Update(void)
   
   button_note_array[array_idx] = current_reading;
   array_idx = (array_idx + 1) % BUTTON_NOTE_ARRAY_LEN;
-}
 
-/**
- * Return the current reading
- */
-bool ButtonNote::GetReading(void)
-{
-  return current_reading;
+  if (!_isToggleNotMomentary)
+  {
+    CheckMIDINeedsUpdate();
+    if (midi_needs_update != prev_midi_needs_update)
+    {
+      usbMIDI.sendControlChange(_cc_parameter, (midi_needs_update) ? 0: 127, in_config.MIDI_Channel);   
+    }
+    prev_midi_needs_update = midi_needs_update; 
+  }  
 }
 
 /**
@@ -125,34 +68,39 @@ void ButtonNote::CheckMIDINeedsUpdate(void)
   midi_needs_update= (!sum);
 }
 
-void ButtonNote::SendNote(int ofst, int analog_volume, config_t in_config)
+/**
+ * Return the current reading
+ */
+bool ButtonNote::GetReading(void)
 {
-  current_note = getScaledNote(ofst, _id, in_config);
-  usbMIDI.sendNoteOff(previous_note, 0, in_config.MIDI_Channel);   
-  usbMIDI.sendNoteOn(current_note, analog_volume, in_config.MIDI_Channel);
-  update_midi_msec  = millis() + BUTTON_NOTE_DEBOUNCE_DELAY;
-  midi_needs_update = false;
-  previous_note = current_note;  
+  return current_reading;
 }
 
-bool ButtonNote::ShouldSendNote(int curr_note_ofst, int curr_volume)
+void ButtonNote::SendControlCode(config_t in_config)
 {
-  if (curr_note_ofst != prev_note_ofst)
+  if (_isToggleNotMomentary)
   {
-    prev_note_ofst = curr_note_ofst;
-    return true;  
-  }
-  else if (curr_volume != prev_volume)
-  {
-    prev_volume = curr_volume;
-    return true;  
+    toggle_state = 1-toggle_state;
+    usbMIDI.sendControlChange(_cc_parameter, (toggle_state) ? 0:127, in_config.MIDI_Channel);   
+    update_midi_msec  = millis() + BUTTON_NOTE_DEBOUNCE_DELAY;
+    midi_needs_update = false;
   }
   else
   {
-    prev_volume = curr_volume;
-    prev_note_ofst = curr_note_ofst;
-    return (GetReading() && 
-            midi_needs_update && 
-            millis() > update_midi_msec);
-  }  
+    // no-op
+  }
+  
+}
+
+bool ButtonNote::ShouldSendNote(void)
+{
+    if (_isToggleNotMomentary)
+    {
+      return (GetReading() && midi_needs_update && 
+              millis() > update_midi_msec);       
+    }
+    else
+    {
+      return false;
+    }
 }

@@ -27,18 +27,16 @@ unsigned long range_in_cm;
 
 int curr_bend_val = 1;
 int prev_bend_val = 0;
-int curr_note_ofst = 0;
-int analog_volume = 100;
 int lin_pot_reading = 0;
 int lin_pot_cc_val = 0;
 
-ButtonNote ButtonNote0(STATION1_BUTTON_3, BUTTON_0);
-ButtonNote ButtonNote1(STATION1_BUTTON_2, BUTTON_1);
-ButtonNote ButtonNote2(STATION1_BUTTON_1, BUTTON_2);
+ButtonNote ButtonNote0(STATION1_BUTTON_3, MIDI_GEN_PURPOSE_1, BUTTON_0, true);
+ButtonNote ButtonNote1(STATION1_BUTTON_2, MIDI_GEN_PURPOSE_2, BUTTON_1, false);
+ButtonNote ButtonNote2(STATION1_BUTTON_1, MIDI_GEN_PURPOSE_3, BUTTON_2, true);
 config_t in_config;
 
 NewPing ultrasonic(STATION1_ULTRA_TRIG, STATION1_ULTRA_SENS, ULTRA_MAX_CM);
-DiscreteJoystick joystick(STATION1_JOYSTICK_UP, STATION1_JOYSTICK_DOWN, STATION1_JOYSTICK_LEFT, STATION1_JOYSTICK_RIGHT);
+DiscreteJoystick joystick(STATION1_JOYSTICK_UP, STATION1_JOYSTICK_DOWN, STATION1_JOYSTICK_LEFT, STATION1_JOYSTICK_RIGHT, MIDI_GEN_PURPOSE_7, MIDI_GEN_PURPOSE_8);
 
 /* Prototypes */
 static void pingCheck(void);
@@ -68,7 +66,7 @@ void setup()
   in_config.button2_offset = 7;
   in_config.button3_offset = 12;
   in_config.button4_offset = 24;
-  in_config.control_code = 16;
+  in_config.control_code = MIDI_GEN_PURPOSE_1;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_MIDI_CHANNEL_ADDR);
   
 #ifdef DEBUG
@@ -96,28 +94,28 @@ void loop()
     range_in_cm = PITCH_BEND_MAX_CM;
   }
   
-  curr_bend_val = SCALED_PITCH_BEND(range_in_cm);
-  if (curr_bend_val!= prev_bend_val && abs(curr_bend_val- prev_bend_val) < MAX_PITCH_BEND_DELTA)
+  curr_bend_val = ONEBYTE_SCALED_PITCH_BEND(range_in_cm);
+  if (curr_bend_val!= prev_bend_val && abs(curr_bend_val- prev_bend_val) < MAX_ONEBYTE_PITCH_BEND_DELTA)
   {
-    usbMIDI.sendPitchBend(curr_bend_val, in_config.MIDI_Channel);
-    prev_bend_val = curr_bend_val;
+    usbMIDI.sendControlChange(MIDI_GEN_PURPOSE_5, curr_bend_val, in_config.MIDI_Channel);
   }
-
-  joystick.UpdateNote(&curr_note_ofst);
-  joystick.UpdateVolume(&analog_volume);
+  prev_bend_val = curr_bend_val;
+    
+  joystick.UpdateXAxis(in_config);
+  joystick.UpdateYAxis(in_config);
 
   /* Send note on debounced rising edge of TEENSY_CAP_TOUCH1_PIN */
-  ButtonNote0.Update();
-  ButtonNote1.Update();
-  ButtonNote2.Update();
+  ButtonNote0.Update(in_config);
+  ButtonNote1.Update(in_config);
+  ButtonNote2.Update(in_config);
   
   /* send notes if needed */
-  if (ButtonNote0.ShouldSendNote(curr_note_ofst, analog_volume)) 
-    ButtonNote0.SendNote(curr_note_ofst, analog_volume, in_config);
-  if (ButtonNote1.ShouldSendNote(curr_note_ofst, analog_volume)) 
-    ButtonNote1.SendNote(curr_note_ofst, analog_volume, in_config);
-  if (ButtonNote2.ShouldSendNote(curr_note_ofst, analog_volume))
-    ButtonNote2.SendNote(curr_note_ofst, analog_volume, in_config);
+  if (ButtonNote0.ShouldSendNote()) 
+    ButtonNote0.SendControlCode(in_config);
+  if (ButtonNote1.ShouldSendNote()) 
+    ButtonNote1.SendControlCode(in_config);
+  if (ButtonNote2.ShouldSendNote())
+    ButtonNote2.SendControlCode(in_config);
   
   /* Consider CapTouch sensors as triggered if any of last CAP_TOUCH_ARRAY_LEN samples were high */
   ButtonNote0.CheckMIDINeedsUpdate();
@@ -131,7 +129,7 @@ void loop()
 
   if (lin_pot_reading > LIN_POT_MIN_READING)
   {
-    usbMIDI.sendControlChange(in_config.control_code, lin_pot_cc_val, in_config.MIDI_Channel);
+    usbMIDI.sendControlChange(MIDI_GEN_PURPOSE_4, lin_pot_cc_val, in_config.MIDI_Channel);
   }
 
 
