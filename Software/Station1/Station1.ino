@@ -30,7 +30,6 @@ int lin_pot_reading = 0;
 int lin_pot_cc_val = 0;
 config_t in_config = {0};
 
-
 /* Static Prototypes */
 static void initPins(void); // Just init the pins as input/output/input_pullup
 static void pingCheck(void); // Ultrasonic callback function
@@ -62,7 +61,6 @@ DiscreteJoystick joystick(STATION1_JOYSTICK_UP, // joystick up pin
                           STATION1_JOYSTICK_RIGHT, // joystick right pin
                           MIDI_GEN_PURPOSE_7, // MIDI CC for horizontal axis 
                           MIDI_GEN_PURPOSE_8); // MIDI CC for vertical axis
-                          
 
 /**
  * Setup pinouts and serial 
@@ -109,23 +107,25 @@ void loop()
   {
     range_in_cm = P_BEND_MAX_CM;
   }
-  
+
+  /* convert ultrasonic range to value for MIDI CC and send it */
   curr_bend_val = P_BEND_ONEBYTE_VALUE(range_in_cm);
   if (curr_bend_val!= prev_bend_val && abs(curr_bend_val- prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
   {
     usbMIDI.sendControlChange(MIDI_GEN_PURPOSE_5, curr_bend_val, in_config.MIDI_Channel);
   }
   prev_bend_val = curr_bend_val;
-    
+
+  /* handle joystick inputs and send MIDI as needed */
   joystick.UpdateXAxis(in_config);
   joystick.UpdateYAxis(in_config);
 
-  /* Send note on debounced rising edge of TEENSY_CAP_TOUCH1_PIN */
+  /* Read buttons and update averaging arrays */
   ButtonNote0.Update(in_config);
   ButtonNote1.Update(in_config);
   ButtonNote2.Update(in_config);
   
-  /* send notes if needed */
+  /* send MIDI CC messages if needed */
   if (ButtonNote0.ShouldSendNote()) 
     ButtonNote0.SendControlCode(in_config);
   if (ButtonNote1.ShouldSendNote()) 
@@ -138,6 +138,7 @@ void loop()
   ButtonNote1.CheckMIDINeedsUpdate();
   ButtonNote2.CheckMIDINeedsUpdate();
 
+  /* Read in linear potentiometer values and convert to CC val */
   lin_pot_reading = analogRead(STATION1_LIN_POT);
   lin_pot_reading = constrain(lin_pot_reading, 0, 1024); 
   lin_pot_cc_val  = floor((1024 - lin_pot_reading) * 128.0/1024.0);

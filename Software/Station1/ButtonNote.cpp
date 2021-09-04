@@ -16,17 +16,8 @@ ButtonNote::ButtonNote(int pin, int cc_parameter, buttonNoteId id, bool isToggle
 {
   _id = id;
   _pin = pin;
-  array_idx = 0;
-  current_reading = LOW;
-  midi_needs_update= true;
-  update_midi_msec = 0;
   _cc_parameter = cc_parameter;
   _isToggleNotMomentary = isToggleNotMomentary;
-
-  for (int i=0; i<BUTTON_AVERAGING_ARRAY_LEN; i++)
-  {
-    button_note_array[i] = 0;
-  }
 }
 
 /**
@@ -46,7 +37,7 @@ void ButtonNote::Update(config_t in_config)
   /**
    * All of the momentary logic occurs here
    */
-  if (!_isToggleNotMomentary)
+  if (false == _isToggleNotMomentary)
   {
     CheckMIDINeedsUpdate();
     if (midi_needs_update != prev_midi_needs_update)
@@ -63,10 +54,10 @@ void ButtonNote::Update(config_t in_config)
 void ButtonNote::CheckMIDINeedsUpdate(void)
 {
   int sum = 0;
+  
   for (int i=0; i < BUTTON_AVERAGING_ARRAY_LEN; i++)
-  {
     sum += button_note_array[i]; 
-  }
+
   midi_needs_update= (!sum);
 }
 
@@ -85,16 +76,12 @@ void ButtonNote::SendControlCode(config_t in_config)
 {
   if (_isToggleNotMomentary)
   {
-    toggle_state = 1-toggle_state;
+    toggle_state = 1 - toggle_state;
     usbMIDI.sendControlChange(_cc_parameter, (toggle_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HI_VAL, in_config.MIDI_Channel);   
     update_midi_msec  = millis() + PREFS_BUTTON_DEBOUNCE_MSEC;
     midi_needs_update = false;
   }
-  else
-  {
-    // no-op for momentary mode
-  }
-  
+  // else{} is a no-op for momentary mode
 }
 
 /**
@@ -106,11 +93,10 @@ bool ButtonNote::ShouldSendNote(void)
     {
       return (GetReading() && 
               midi_needs_update && 
-              millis() > update_midi_msec
-             );
+              millis() > update_midi_msec);
     }
     else
-    {
+    { 
       return false;
     }
 }

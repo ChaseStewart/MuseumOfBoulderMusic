@@ -36,22 +36,22 @@ class DiscreteJoystick
     int _rightPin;
     int _xAxisCC;
     int _yAxisCC;
-    int xAxisVal;
-    int yAxisVal;
+    int xAxisVal = 50;
+    int yAxisVal = 50;
     bool upPressed;
     bool downPressed;
     bool leftPressed;
     bool rightPressed;
-    bool isXDirectionHeld;
-    bool wasXDirectionHeld;
+    bool isXDirectionHeld = false;
+    bool wasXDirectionHeld = false;
     joystickDirectionId currentXDirection;
     joystickDirectionId lastXDirection;
-    unsigned long holdXStartMillis;
-    bool isYDirectionHeld;
-    bool wasYDirectionHeld;
+    unsigned long holdXStartMillis = 0;
+    bool isYDirectionHeld = false;
+    bool wasYDirectionHeld = false;
     joystickDirectionId currentYDirection;
     joystickDirectionId lastYDirection;
-    unsigned long holdYStartMillis;
+    unsigned long holdYStartMillis = 0;
 };
 
 #endif // __JOYSTICK_H__

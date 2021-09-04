@@ -19,39 +19,30 @@ DiscreteJoystick::DiscreteJoystick(uint8_t upPin, uint8_t downPin, uint8_t leftP
   _downPin = downPin;
   _leftPin = leftPin;
   _rightPin = rightPin;
-  wasXDirectionHeld = false;
-  isXDirectionHeld = false;
-  holdXStartMillis = 0;
-  wasYDirectionHeld = false;
-  isYDirectionHeld = false;
-  holdYStartMillis = 0;
   _xAxisCC = xAxis_cc;
   _yAxisCC = yAxis_cc;
-  xAxisVal = 50;
-  yAxisVal = 50;
 }
-
 
 void DiscreteJoystick::UpdateXAxis(config_t in_config)
 {
-  upPressed    = !digitalRead(_upPin);
-  downPressed  = !digitalRead(_downPin);
+  leftPressed    = !digitalRead(_leftPin);
+  rightPressed  = !digitalRead(_rightPin);
     
-  isXDirectionHeld = (upPressed || downPressed);
+  isXDirectionHeld = (leftPressed || rightPressed);
   
   if(isXDirectionHeld && !wasXDirectionHeld )
   {
     holdXStartMillis = millis();
-    if (upPressed) currentXDirection = JOY_UP;
-    else if (downPressed) currentXDirection = JOY_DOWN;
+    if (leftPressed) currentXDirection = JOY_LEFT;
+    else if (rightPressed) currentXDirection = JOY_RIGHT;
   }
   else if (isXDirectionHeld && wasXDirectionHeld)
   {
     if ((millis() - holdXStartMillis) > PREFS_JOYSTICK_DEBOUNCE_MSEC)
     {
-      xAxisVal = (JOY_DOWN == currentXDirection) ? xAxisVal - 10 : xAxisVal + 10;
+      xAxisVal = (JOY_LEFT == currentXDirection) ? xAxisVal - 10 : xAxisVal + 10;
       xAxisVal = constrain(xAxisVal, 0, 127);
-      usbMIDI.sendControlChange(_xAxisCC, xAxisVal, in_config.MIDI_Channel);   
+      usbMIDI.sendControlChange(_xAxisCC, xAxisVal, in_config.MIDI_Channel);
       holdXStartMillis = millis();
     }
 
@@ -66,24 +57,24 @@ void DiscreteJoystick::UpdateXAxis(config_t in_config)
 
 void DiscreteJoystick::UpdateYAxis(config_t in_config)
 {
-  leftPressed    = !digitalRead(_leftPin);
-  rightPressed  = !digitalRead(_rightPin);
+  upPressed    = !digitalRead(_upPin);
+  downPressed  = !digitalRead(_downPin);
     
-  isYDirectionHeld = (leftPressed || rightPressed);
+  isYDirectionHeld = (upPressed || downPressed);
   
   if(isYDirectionHeld && !wasYDirectionHeld )
   {
     holdYStartMillis = millis();
-    if (leftPressed) currentYDirection = JOY_LEFT;
-    else if (rightPressed) currentYDirection = JOY_RIGHT;
+    if (upPressed) currentYDirection = JOY_UP;
+    else if (downPressed) currentYDirection = JOY_DOWN;
   }
   else if (isYDirectionHeld && wasYDirectionHeld)
   {
     if ((millis() - holdYStartMillis) > PREFS_JOYSTICK_DEBOUNCE_MSEC)
     {
-      yAxisVal = (JOY_LEFT == currentYDirection) ? yAxisVal - 10 : yAxisVal + 10;
+      yAxisVal = (JOY_DOWN == currentYDirection) ? yAxisVal - 10 : yAxisVal + 10;
       yAxisVal = constrain(yAxisVal, 0, 127);
-      usbMIDI.sendControlChange(_yAxisCC, yAxisVal, in_config.MIDI_Channel);
+      usbMIDI.sendControlChange(_yAxisCC, yAxisVal, in_config.MIDI_Channel);   
       holdYStartMillis = millis();
     }
 
@@ -92,8 +83,6 @@ void DiscreteJoystick::UpdateYAxis(config_t in_config)
       holdYStartMillis = millis();
     }
   }
-
-
   lastYDirection = currentYDirection;
   wasYDirectionHeld = isYDirectionHeld;
 }

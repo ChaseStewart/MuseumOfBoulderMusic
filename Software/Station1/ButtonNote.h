@@ -38,8 +38,8 @@ class ButtonNote
     void CheckMIDINeedsUpdate(void);
     bool ShouldSendNote(void);
 
-    unsigned long update_midi_msec;
-    bool midi_needs_update;
+    unsigned long update_midi_msec = 0;
+    bool midi_needs_update = true;
     unsigned long press_time;
     
   private:
@@ -47,10 +47,10 @@ class ButtonNote
     bool toggle_state;
     bool _isToggleNotMomentary;
     int _pin; // pin number of Arduino that is connected with SIG pin of Ultrasonic Ranger.
-    int button_note_array[BUTTON_AVERAGING_ARRAY_LEN];
-    int array_idx;
-    int current_reading;
-    int prev_midi_needs_update;
+    int button_note_array[BUTTON_AVERAGING_ARRAY_LEN] = {0};
+    int array_idx = 0;
+    int current_reading = LOW;
+    int prev_midi_needs_update = false;
     int _cc_parameter;
 };
 
