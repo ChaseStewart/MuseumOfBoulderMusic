@@ -23,11 +23,10 @@ ButtonNote::ButtonNote(int pin, int cc_parameter, buttonNoteId id, bool isToggle
   _cc_parameter = cc_parameter;
   _isToggleNotMomentary = isToggleNotMomentary;
 
-  for (int i=0; i<BUTTON_NOTE_ARRAY_LEN; i++)
+  for (int i=0; i<BUTTON_AVERAGING_ARRAY_LEN; i++)
   {
     button_note_array[i] = 0;
   }
-
 }
 
 /**
@@ -42,14 +41,17 @@ void ButtonNote::Update(config_t in_config)
   }
   
   button_note_array[array_idx] = current_reading;
-  array_idx = (array_idx + 1) % BUTTON_NOTE_ARRAY_LEN;
+  array_idx = (array_idx + 1) % BUTTON_AVERAGING_ARRAY_LEN;
 
+  /**
+   * All of the momentary logic occurs here
+   */
   if (!_isToggleNotMomentary)
   {
     CheckMIDINeedsUpdate();
     if (midi_needs_update != prev_midi_needs_update)
     {
-      usbMIDI.sendControlChange(_cc_parameter, (midi_needs_update) ? 0: 127, in_config.MIDI_Channel);   
+      usbMIDI.sendControlChange(_cc_parameter, (midi_needs_update) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HI_VAL, in_config.MIDI_Channel);   
     }
     prev_midi_needs_update = midi_needs_update; 
   }  
@@ -61,7 +63,7 @@ void ButtonNote::Update(config_t in_config)
 void ButtonNote::CheckMIDINeedsUpdate(void)
 {
   int sum = 0;
-  for (int i=0; i < BUTTON_NOTE_ARRAY_LEN; i++)
+  for (int i=0; i < BUTTON_AVERAGING_ARRAY_LEN; i++)
   {
     sum += button_note_array[i]; 
   }
@@ -76,28 +78,36 @@ bool ButtonNote::GetReading(void)
   return current_reading;
 }
 
+/**
+ * Send the MIDI control change and update state vars for toggle mode
+ */
 void ButtonNote::SendControlCode(config_t in_config)
 {
   if (_isToggleNotMomentary)
   {
     toggle_state = 1-toggle_state;
-    usbMIDI.sendControlChange(_cc_parameter, (toggle_state) ? 0:127, in_config.MIDI_Channel);   
-    update_midi_msec  = millis() + BUTTON_NOTE_DEBOUNCE_DELAY;
+    usbMIDI.sendControlChange(_cc_parameter, (toggle_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HI_VAL, in_config.MIDI_Channel);   
+    update_midi_msec  = millis() + PREFS_BUTTON_DEBOUNCE_MSEC;
     midi_needs_update = false;
   }
   else
   {
-    // no-op
+    // no-op for momentary mode
   }
   
 }
 
+/**
+ * Implement the Toggle logic for sending a note
+ */
 bool ButtonNote::ShouldSendNote(void)
 {
     if (_isToggleNotMomentary)
     {
-      return (GetReading() && midi_needs_update && 
-              millis() > update_midi_msec);       
+      return (GetReading() && 
+              midi_needs_update && 
+              millis() > update_midi_msec
+             );
     }
     else
     {

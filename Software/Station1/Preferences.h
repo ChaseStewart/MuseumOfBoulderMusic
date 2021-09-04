@@ -12,30 +12,34 @@
 
 #define DEBUG
 
-#define ULTRA_MAX_CM 30
+/* Ultrasonic / pitch bend preferences */
+#define PREFS_ULTRA_MAX_CM 30
+#define PREFS_ULTRA_PING_PERIOD (unsigned long) (3)
+#define PREFS_P_BEND_MAX_DELTA 1700
+#define PREFS_P_BEND_ONEBYTE_MAX_DELTA 10
 
-#define ULTRA_PING_PERIOD (unsigned long) (3)
+/* Button preferences */
+#define PREFS_BUTTON_DEBOUNCE_MSEC 10
+#define PREFS_BUTTON_CC_LOW_VAL 0 // what CC corresponds to button OFF
+#define PREFS_BUTTON_CC_HI_VAL 127 // what CC val corresponds to button ON
 
-#define MAX_PITCH_BEND_DELTA 1700
+/* Joystick preferences */
+#define PREFS_JOYSTICK_DEBOUNCE_MSEC 300
 
-#define MAX_ONEBYTE_PITCH_BEND_DELTA 10
+/* Linear potentiometer preferences */
+#define PREFS_LIN_POT_MIN_READING 10
 
-#define BUTTON_NOTE_DEBOUNCE_DELAY 10
-
-#define JOYSTICK_MSEC_PER_NOTE 300
-
-#define LIN_POT_MIN_READING 10
 /**
- * Enumeration of the various 
+ * Enumeration of the various supported modes
  */
-enum scale_t
+enum midi_mode_t
 {
-  MOD_MAJOR,  
-  MOD_MINOR,
-  MOD_MIXOLYDIAN,
-  MOD_DORIAN,
-  MOD_CHROMATIC,
-  MOD_LIMIT
+  MODE_MAJOR,  
+  MODE_MINOR,
+  MODE_MIXOLYDIAN,
+  MODE_DORIAN,
+  MODE_CHROMATIC,
+  MODE_LIMIT
 };
 
 /**
@@ -44,7 +48,7 @@ enum scale_t
 typedef struct 
 {
   uint8_t root_note;
-  scale_t scale;
+  midi_mode_t  mode;
   uint8_t button1_offset;
   uint8_t button2_offset;
   uint8_t button3_offset;

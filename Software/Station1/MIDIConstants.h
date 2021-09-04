@@ -7,7 +7,6 @@
  *  License: Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)    
  *  
  *******************************************************/
- 
 #ifndef __MIDI_CONST_H__
 #define __MIDI_CONST_H__
 
@@ -37,25 +36,28 @@ const int MIDI_CTRL_CHG_CHAN_VOL   = 0x07;
 const int MIDI_CTRL_CHG_EXPRESSION = 0x0B;
 const int MIDI_CTRL_CHG_EFFECT_1   = 0x0C;
 const int MIDI_CTRL_CHG_EFFECT_2   = 0x0D;
+const int MIDI_GEN_PURPOSE_1       = 0x10;
+const int MIDI_GEN_PURPOSE_2       = 0x11;
+const int MIDI_GEN_PURPOSE_3       = 0x12;
+const int MIDI_GEN_PURPOSE_4       = 0x13;
 const int MIDI_CTRL_CHG_LEGATO_FSW = 0x44;
+const int MIDI_GEN_PURPOSE_5       = 0x50;
+const int MIDI_GEN_PURPOSE_6       = 0x51;
+const int MIDI_GEN_PURPOSE_7       = 0x52;
+const int MIDI_GEN_PURPOSE_8       = 0x53;
 const int MIDI_CTRL_CHG_PITCHBEND  = 0xE0;
 const int MIDI_CTRL_CHG_MAX        = 0x7F;
 const int MIDI_CTRL_CHG_INVAL      = 0xFF;
 
-const int MIDI_GEN_PURPOSE_1 = 0x10;
-const int MIDI_GEN_PURPOSE_2 = 0x11;
-const int MIDI_GEN_PURPOSE_3 = 0x12;
-const int MIDI_GEN_PURPOSE_4 = 0x13;
-const int MIDI_GEN_PURPOSE_5 = 0x50;
-const int MIDI_GEN_PURPOSE_6 = 0x51;
-const int MIDI_GEN_PURPOSE_7 = 0x52;
-const int MIDI_GEN_PURPOSE_8 = 0x53;
-
-
+/* These are paddle/ MOBMusic specific, might not belong here */
 const int MIDI_OCTAVE_LEN  = 7;
 const int MIDI_NUM_OCTAVES = 4;
 const int MIDI_SCALE_LEN = 128;
 
+/**
+ * MIDI notes for octave -1 
+ * To change octave, add or subtract 12
+ */
 const int ROOT_NOTE_C = 0;
 const int ROOT_NOTE_CSHARP = 1;
 const int ROOT_NOTE_D = 2;

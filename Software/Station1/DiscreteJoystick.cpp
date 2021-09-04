@@ -13,8 +13,6 @@
 #include "Preferences.h"
 
 
-
-
 DiscreteJoystick::DiscreteJoystick(uint8_t upPin, uint8_t downPin, uint8_t leftPin, uint8_t rightPin, int xAxis_cc, int yAxis_cc)
 {
   _upPin = upPin;
@@ -49,7 +47,7 @@ void DiscreteJoystick::UpdateXAxis(config_t in_config)
   }
   else if (isXDirectionHeld && wasXDirectionHeld)
   {
-    if ((millis() - holdXStartMillis) > JOYSTICK_MSEC_PER_NOTE)
+    if ((millis() - holdXStartMillis) > PREFS_JOYSTICK_DEBOUNCE_MSEC)
     {
       xAxisVal = (JOY_DOWN == currentXDirection) ? xAxisVal - 10 : xAxisVal + 10;
       xAxisVal = constrain(xAxisVal, 0, 127);
@@ -81,7 +79,7 @@ void DiscreteJoystick::UpdateYAxis(config_t in_config)
   }
   else if (isYDirectionHeld && wasYDirectionHeld)
   {
-    if ((millis() - holdYStartMillis) > JOYSTICK_MSEC_PER_NOTE)
+    if ((millis() - holdYStartMillis) > PREFS_JOYSTICK_DEBOUNCE_MSEC)
     {
       yAxisVal = (JOY_LEFT == currentYDirection) ? yAxisVal - 10 : yAxisVal + 10;
       yAxisVal = constrain(yAxisVal, 0, 127);

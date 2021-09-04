@@ -13,8 +13,8 @@
 /**.
  * This file is now very barebones because the NewPing library is doing the heavy-lifting for the Ultrasonic firmware 
  */
-#define PITCH_BEND_MAX_CM 30 // adjust this for sensitivity range of pitch bend
-#define PITCH_BEND_MIN_CM 2 // adjust this for sensitivity range of pitch bend
+#define P_BEND_MAX_CM 30 // adjust this for sensitivity range of pitch bend
+#define P_BEND_MIN_CM 2 // adjust this for sensitivity range of pitch bend
 
 /**
  * MIDI Pitch bend message accepts a 14-bit twos compliment value, 
@@ -23,12 +23,12 @@
  * 
  * NOTE: use pow(2,13) instead for full range!
  */
-#define SCALED_PITCH_BEND(x) (int) (pow(2,12) * x  / PITCH_BEND_MAX_CM) - pow(2,12)  // Do not adjust!
+#define P_BEND_SCALED_VALUE(x) (int) (pow(2,12) * x  / P_BEND_MAX_CM) - pow(2,12)  // Do not adjust!
 
 /**
  * If using pitch bend for another MIDI control code, the range is only 0-127
  */
-#define ONEBYTE_SCALED_PITCH_BEND(x) (int) (pow(2,7) * (PITCH_BEND_MAX_CM - x)  / PITCH_BEND_MAX_CM)  // Do not adjust!
+#define P_BEND_ONEBYTE_VALUE(x) (int) (pow(2,7) * (P_BEND_MAX_CM - x)  / P_BEND_MAX_CM)  // Do not adjust!
 
 
 #endif // __ULTRASONIC_H__

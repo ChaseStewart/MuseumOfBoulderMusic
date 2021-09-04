@@ -49,9 +49,10 @@
 #define STATION1_BUTTON_3 6
 #define STATION1_ULTRA_SENS 8
 #define STATION1_ULTRA_TRIG 9
+#define TEENSY_LED_PIN 13
+
 #define STATION1_LIN_POT ANALOG_READ(0) // ANALOG 0, pin 14
 
-#define TEENSY_LED_PIN 13
 
 
 #endif /* __STATION1_BSP_H__ */

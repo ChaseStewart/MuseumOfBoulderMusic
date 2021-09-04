@@ -13,7 +13,10 @@
 #include "Preferences.h"
 #include "Nonvolatile.h"
 
-#define BUTTON_NOTE_ARRAY_LEN 10
+/* Definitions */
+#define BUTTON_AVERAGING_ARRAY_LEN 10 // averaging array
+#define BUTTON_MODE_TOGGLE true // see bool isToggleNotMomentary in constructor
+#define BUTTON_MODE_MOMENTARY false // see bool isToggleNotMomentary in constructor
 
 enum buttonNoteId 
 {
@@ -44,7 +47,7 @@ class ButtonNote
     bool toggle_state;
     bool _isToggleNotMomentary;
     int _pin; // pin number of Arduino that is connected with SIG pin of Ultrasonic Ranger.
-    int button_note_array[BUTTON_NOTE_ARRAY_LEN];
+    int button_note_array[BUTTON_AVERAGING_ARRAY_LEN];
     int array_idx;
     int current_reading;
     int prev_midi_needs_update;
