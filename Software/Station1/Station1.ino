@@ -193,11 +193,26 @@ void printBanner(void)
 {
   DEBUG_PRINTLN();
   DEBUG_PRINTLN();
-  DEBUG_PRINTLN("***********************************************");
-  DEBUG_PRINTLN("*             Station 1 Firmware              *");
-  DEBUG_PRINTLN("*                                             *");
-  DEBUG_PRINTLN("* By Chase E. Stewart for Hidden Layer Design *");
-  DEBUG_PRINTLN("***********************************************");
+  DEBUG_PRINTLN("**************************************************");
+  DEBUG_PRINTLN("*             Station 1 Firmware                 *");
+  DEBUG_PRINTLN("*                                                *");
+  DEBUG_PRINTLN("* By Chase E. Stewart for Hidden Layer Design    *");
+  DEBUG_PRINTLN("*                                                *");
+
+#if !defined(CORE_TEENSY)
+  DEBUG_PRINTLN("* Running on non-Teensy!                         *");
+#elif !defined(__arm__)
+  DEBUG_PRINTLN("* Running on a non-arm Teensy like the 2.0/2.1++ *");
+#elif defined(__MKL26Z64__)
+  DEBUG_PRINTLN("* Running on a Teensy LC                         *");
+#elif defined(__MK20DX256__)
+  DEBUG_PRINTLN("* Running on a Teensy 3.1                        *");
+#elif defined(__MK20DX128__)
+  DEBUG_PRINTLN("* Running on a Teensy 3.0                        *");
+#else
+  DEBUG_PRINTLN("* Running on an unknown Teensy processor         *");
+#endif
+
+  DEBUG_PRINTLN("**************************************************");
   DEBUG_PRINTLN();
-  // TODO FIXME return info about MIDI channel and station ID
 }
