@@ -1,5 +1,5 @@
 /******************************************************* 
- *  File: TestFirmwareBSP.h
+ *  File: TestStationBSP.h
  *    
  *  Author: Chase E. Stewart
  *  For Hidden Layer Design
@@ -7,8 +7,8 @@
  *  License: Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)    
  *  
  *******************************************************/
-#ifndef __STATION1_BSP_H__
-#define __STATION1_BSP_H__
+#ifndef __TEST_STATION_BSP_H__
+#define __TEST_STATION_BSP_H__
 
 #include "Arduino.h"
 #include "Preferences.h"
@@ -40,19 +40,18 @@
 #define SCB_AIRCR (*(volatile uint32_t *)0xE000ED0C) // Application Interrupt and Reset Control location for Teensy
 
 /* Teensy pinout constants */
-#define STATION1_JOYSTICK_RIGHT 0
-#define STATION1_JOYSTICK_LEFT 1
-#define STATION1_JOYSTICK_UP 2
-#define STATION1_JOYSTICK_DOWN 3
-#define STATION1_BUTTON_1 4
-#define STATION1_BUTTON_2 5
-#define STATION1_BUTTON_3 6
-#define STATION1_ULTRA_SENS 8
-#define STATION1_ULTRA_TRIG 9
+#define TEST_STATION_JOYSTICK_RIGHT 0
+#define TEST_STATION_JOYSTICK_LEFT 1
+#define TEST_STATION_JOYSTICK_UP 2
+#define TEST_STATION_JOYSTICK_DOWN 3
+#define TEST_STATION_BUTTON_1 4
+#define TEST_STATION_BUTTON_2 5
+#define TEST_STATION_BUTTON_3 6
+#define TEST_STATION_ULTRA_SENS 8
+#define TEST_STATION_ULTRA_TRIG 9
 #define TEENSY_LED_PIN 13
 
-#define STATION1_LIN_POT ANALOG_READ(0) // ANALOG 0, pin 14
+#define TEST_STATION_LIN_POT ANALOG_READ(0) // ANALOG 0, pin 14
 
 
-
-#endif /* __STATION1_BSP_H__ */
+#endif /* __TEST_STATION_BSP_H__ */

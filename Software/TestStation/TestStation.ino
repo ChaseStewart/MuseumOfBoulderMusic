@@ -1,5 +1,5 @@
 /******************************************************* 
- *  File: Station1.ino
+ *  File: TestStation.ino
  *    
  *  Author: Chase E. Stewart
  *  For Hidden Layer Design
@@ -13,7 +13,7 @@
 #include <EEPROM.h>
 
 #include "Preferences.h"
-#include "Station1BSP.h"
+#include "TestStationBSP.h"
 #include "MIDIConstants.h"
 #include "Nonvolatile.h"
 #include "Ultrasonic.h"
@@ -36,29 +36,29 @@ static void pingCheck(void); // Ultrasonic callback function
 static void printBanner(void); // Print a serial welcome banner
 
 /* Global class instances */
-ButtonNote ButtonNote0(STATION1_BUTTON_3, // button pin
+ButtonNote ButtonNote0(TEST_STATION_BUTTON_3, // button pin
                        MIDI_GEN_PURPOSE_1, // MIDI CC
                        BUTTON_0, // button ID
                        BUTTON_MODE_TOGGLE); // toggle or momentary button
                        
-ButtonNote ButtonNote1(STATION1_BUTTON_2, // button pin
+ButtonNote ButtonNote1(TEST_STATION_BUTTON_2, // button pin
                        MIDI_GEN_PURPOSE_2, // MIDI CC
                        BUTTON_1, // button ID
                        BUTTON_MODE_MOMENTARY); // toggle or momentary button
                        
-ButtonNote ButtonNote2(STATION1_BUTTON_1, // button pin
+ButtonNote ButtonNote2(TEST_STATION_BUTTON_1, // button pin
                        MIDI_GEN_PURPOSE_3, // MIDI CC 
                        BUTTON_2, // button ID
                        BUTTON_MODE_TOGGLE); // toggle or momentary button
 
-NewPing ultrasonic(STATION1_ULTRA_TRIG, // Trigger pin
-                   STATION1_ULTRA_SENS, // Sense pin
+NewPing ultrasonic(TEST_STATION_ULTRA_TRIG, // Trigger pin
+                   TEST_STATION_ULTRA_SENS, // Sense pin
                    PREFS_ULTRA_MAX_CM); // Max distance limit
 
-DiscreteJoystick joystick(STATION1_JOYSTICK_UP, // joystick up pin
-                          STATION1_JOYSTICK_DOWN, // joystick down pin
-                          STATION1_JOYSTICK_LEFT, // joystick left pin
-                          STATION1_JOYSTICK_RIGHT, // joystick right pin
+DiscreteJoystick joystick(TEST_STATION_JOYSTICK_UP, // joystick up pin
+                          TEST_STATION_JOYSTICK_DOWN, // joystick down pin
+                          TEST_STATION_JOYSTICK_LEFT, // joystick left pin
+                          TEST_STATION_JOYSTICK_RIGHT, // joystick right pin
                           MIDI_GEN_PURPOSE_7, // MIDI CC for horizontal axis 
                           MIDI_GEN_PURPOSE_8); // MIDI CC for vertical axis
 
@@ -139,7 +139,7 @@ void loop()
   ButtonNote2.CheckMIDINeedsUpdate();
 
   /* Read in linear potentiometer values and convert to CC val */
-  lin_pot_reading = analogRead(STATION1_LIN_POT);
+  lin_pot_reading = analogRead(TEST_STATION_LIN_POT);
   lin_pot_reading = constrain(lin_pot_reading, 0, 1024); 
   lin_pot_cc_val  = floor((1024 - lin_pot_reading) * 128.0/1024.0);
 
@@ -175,14 +175,14 @@ static void pingCheck(void)
  */
 static void initPins(void)
 {
-  pinMode(STATION1_JOYSTICK_RIGHT, INPUT_PULLUP);
-  pinMode(STATION1_JOYSTICK_LEFT, INPUT_PULLUP);
-  pinMode(STATION1_JOYSTICK_UP, INPUT_PULLUP);
-  pinMode(STATION1_JOYSTICK_DOWN, INPUT_PULLUP);
-  pinMode(STATION1_BUTTON_1, INPUT_PULLUP);
-  pinMode(STATION1_BUTTON_2, INPUT_PULLUP);
-  pinMode(STATION1_BUTTON_3, INPUT_PULLUP);
-  pinMode(STATION1_LIN_POT, INPUT);
+  pinMode(TEST_STATION_JOYSTICK_RIGHT, INPUT_PULLUP);
+  pinMode(TEST_STATION_JOYSTICK_LEFT, INPUT_PULLUP);
+  pinMode(TEST_STATION_JOYSTICK_UP, INPUT_PULLUP);
+  pinMode(TEST_STATION_JOYSTICK_DOWN, INPUT_PULLUP);
+  pinMode(TEST_STATION_BUTTON_1, INPUT_PULLUP);
+  pinMode(TEST_STATION_BUTTON_2, INPUT_PULLUP);
+  pinMode(TEST_STATION_BUTTON_3, INPUT_PULLUP);
+  pinMode(TEST_STATION_LIN_POT, INPUT);
   pinMode(TEENSY_LED_PIN, OUTPUT);
 }
 

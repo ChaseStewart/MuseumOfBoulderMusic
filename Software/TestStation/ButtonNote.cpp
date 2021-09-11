@@ -10,7 +10,7 @@
 #include "Arduino.h"
 #include "ButtonNote.h"
 #include "MIDIConstants.h"
-#include "Station1BSP.h"
+#include "TestStationBSP.h"
 
 ButtonNote::ButtonNote(int pin, int cc_parameter, buttonNoteId id, bool isToggleNotMomentary)
 {

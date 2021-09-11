@@ -8,7 +8,7 @@
  *
  *******************************************************/
 #include "Arduino.h"
-#include "Station1BSP.h"
+#include "TestStationBSP.h"
 #include "DiscreteJoystick.h"
 #include "Preferences.h"
 
