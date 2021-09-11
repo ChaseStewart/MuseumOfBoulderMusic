@@ -5,6 +5,7 @@ Repository to hold work for the music installation for Museum of Boulder Oct 202
 [Chase E. Stewart](https://chasestewart.co) for [Hidden Layer Design](https://hiddenlayerdesign.com)
 
 # Repository Layout
+`/Hardware/PercussionStation/...` - Hardware layout diagrams for the percussion station.
 `/Software/TestFirmware/...` - Basic Teensy firmware that can take input from a superset of all involved sensors and just print the status of these sensors over serial. It also compiles with the TeensyMIDI library and does a sort of minimal no-op involving MIDI (it reads inbound MIDI messages in the loop).
 
 `/Software/Station1/...` - Firmware for the first MIDI station that just does some basic sensor to MIDI conversion.
