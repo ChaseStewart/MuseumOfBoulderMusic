@@ -10,9 +10,32 @@
 #ifndef __PREFERENCES_H__
 #define __PREFERENCES_H__
 
+#include "Arduino.h"
 #include "MIDIConstants.h"
 
 #define DEBUG
+
+/**
+ * Silence all printouts if not in DEBUG
+ * 
+ * NOTE: Set DEBUG definition in Preferences.h
+ */
+#ifdef DEBUG
+#define DEBUG_PRINTLN(x)  Serial.println(x)
+#define DEBUG_PRINT(x)  Serial.print(x)
+#define DEBUG_PRINTLN_HEX(x) Serial.println (x, HEX)
+#define DEBUG_PRINT_HEX(x) Serial.print (x, HEX)
+#define DEBUG_PRINT_DEC4(x) Serial.print((float) x, 4)
+#define DEBUG_PRINT_DEC3(x) Serial.print((float )x, 3)
+#else
+#define DEBUG_PRINTLN(x)
+#define DEBUG_PRINT(x)
+#define DEBUG_PRINTLN_HEX(x) 
+#define DEBUG_PRINT_HEX(x)
+#define DEBUG_PRINT_DEC4(x) 
+#define DEBUG_PRINT_DEC3(x)
+#endif /* DEBUG */
+
 
 /* Ultrasonic / pitch bend preferences */
 #define PREFS_ULTRA_MAX_CM 30

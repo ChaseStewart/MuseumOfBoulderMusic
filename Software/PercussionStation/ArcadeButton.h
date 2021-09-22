@@ -30,7 +30,7 @@ enum ArcadeButtonId
 class ArcadeButton
 {
   public:
-    ArcadeButton(int pin, ArcadeButtonId id);
+    ArcadeButton(int sensPin, int ledPin, ArcadeButtonId id);
     void Update(void);
     bool GetReading(void);
     void CheckMIDINeedsUpdate(void);
@@ -43,6 +43,7 @@ class ArcadeButton
   private:
     ArcadeButtonId _id;
     int _pin; // pin number of Arduino that is connected with SIG pin of Ultrasonic Ranger.
+    int _led;
     int arcade_button_array[BUTTON_AVERAGING_ARRAY_LEN] = {0};
     int array_idx = 0;
     int current_reading = LOW;

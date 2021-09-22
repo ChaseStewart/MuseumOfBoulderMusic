@@ -12,10 +12,11 @@
 #include "MIDIConstants.h"
 #include "PercussionStationBSP.h"
 
-ArcadeButton::ArcadeButton(int pin, ArcadeButtonId id)
+ArcadeButton::ArcadeButton(int sensPin, int ledPin, ArcadeButtonId id)
 {
   _id = id;
-  _pin = pin;
+  _pin = sensPin;
+  _led = ledPin;
   _cc_parameter = MIDI_GEN_PURPOSE_1; // DEFAULT VALUE
   _midi_channel = MIDI_CHANNEL_1; // DEFAULT_VALUE
 }
@@ -38,7 +39,12 @@ void ArcadeButton::Update(void)
   CheckMIDINeedsUpdate();
   if (midi_needs_update != prev_midi_needs_update)
   {
+    digitalWrite(_led, (midi_needs_update) ? HIGH: LOW);
     usbMIDI.sendControlChange(_cc_parameter, (midi_needs_update) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HI_VAL, _midi_channel);   
+    DEBUG_PRINT("Button ");
+    DEBUG_PRINT((int)_id);
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(midi_needs_update);
   }
   
   prev_midi_needs_update = midi_needs_update; 

@@ -22,8 +22,9 @@
 /**
  * START EEPROM preferences to be written
  */
-#define THIS_STATION_ID 0x1
-#define THIS_MIDI_CHANNEL 0x1
+const uint8_t THIS_STATION_ID = 0x2;
+const uint8_t THIS_MIDI_CHANNEL = 0x2;
+const stationType_t THIS_STATION_TYPE = STATION_TYPE_PERCUSSION;
 /**
  * END EEPROM preferences to be written
  */
@@ -61,7 +62,7 @@ void setup()
   
   printBanner();
   DEBUG_PRINTLN("* Updating EEPROM *");
-  updateEEPROM(THIS_STATION_ID, THIS_MIDI_CHANNEL);
+  updateEEPROM(THIS_STATION_ID, THIS_MIDI_CHANNEL, THIS_STATION_TYPE );
   DEBUG_PRINTLN();
   DEBUG_PRINTLN("* Printing EEPROM *");
   printEEPROM();
@@ -78,10 +79,11 @@ void loop()
 /**
  * Check and set
  */
-static void updateEEPROM(uint8_t stationID, uint8_t midiChannel)
+static void updateEEPROM(uint8_t stationID, uint8_t midiChannel, stationType_t stationType)
 {
   EEPROMCheckAndSet(EEPROM_ADDR_STATION_ID, stationID);
   EEPROMCheckAndSet(EEPROM_ADDR_MIDI_CHANNEL, midiChannel);  
+  EEPROMCheckAndSet(EEPROM_ADDR_STATION_TYPE, (uint8_t) stationType);  
 }
 
 static void printEEPROM(void)
@@ -139,6 +141,8 @@ void printBanner(void)
   DEBUG_PRINTLN("* By Chase E. Stewart for Hidden Layer Design    *");
 #if !defined(CORE_TEENSY)
   DEBUG_PRINTLN("* Running on non-Teensy!                         *");
+#elif defined(__IMXRT1062__)
+  DEBUG_PRINTLN("* Running on a Teensy 4.x                        *");
 #elif !defined(__arm__)
   DEBUG_PRINTLN("* Running on a non-arm Teensy like the 2.0/2.1++ *");
 #elif defined(__MKL26Z64__)
