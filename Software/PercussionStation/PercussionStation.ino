@@ -1,5 +1,3 @@
-
-
 /******************************************************* 
  *  File: PercussionStation.ino
  *    
@@ -13,7 +11,7 @@
  *******************************************************/
 #include <EEPROM.h>
 #include <NewPing.h>
-#include <WS2812Serial.h>
+#include "USBHost_t36.h"
 
 #include "Preferences.h"
 #include "PercussionStationBSP.h"
@@ -21,9 +19,15 @@
 #include "Nonvolatile.h"
 #include "Ultrasonic.h"
 #include "ArcadeButton.h"
+#include "NeoPixel.h"
 
-#include "USBHost_t36.h"
+byte NeoStick_drawingMemory[NeoStick_count*3];         //  3 bytes per LED
+DMAMEM byte NeoStick_displayMemory[NeoStick_count*12]; // 12 bytes per LED
 
+byte NeoButtons_drawingMemory[NeoButtons_count*3];         //  3 bytes per LED
+DMAMEM byte NeoButtons_displayMemory[NeoButtons_count*12]; // 12 bytes per LED
+
+/* Thanks to Paul Stoffregen for Teensy and for this USBHost library! */
 USBHost myusb;
 USBHub hub1(myusb);
 USBHIDParser hid1(myusb);
@@ -32,7 +36,6 @@ USBHIDParser hid1(myusb);
 JoystickController joysticks(myusb);
 int user_axis[64];
 uint32_t buttons_prev = 0;
-
 
 USBDriver *drivers[] = {&hub1, &joysticks, &hid1};
 #define CNT_DEVICES (sizeof(drivers)/sizeof(drivers[0]))
@@ -49,12 +52,7 @@ uint8_t joystick_left_trigger_value[COUNT_JOYSTICKS] = {0};
 uint8_t joystick_right_trigger_value[COUNT_JOYSTICKS] = {0};
 uint64_t joystick_full_notify_mask = (uint64_t) - 1;
 
-bool show_changed_only = true;
-
-
 int psAxis[64];
-
-
 
 /* Globals */
 unsigned long ping_time;
@@ -66,22 +64,14 @@ int curr_bend_val = 1;
 int prev_bend_val = 0;
 config_t in_config = {0};
 
-const int NeoStick_count = 8;
-byte NeoStick_drawingMemory[NeoStick_count*3];         //  3 bytes per LED
-DMAMEM byte NeoStick_displayMemory[NeoStick_count*12]; // 12 bytes per LED
 
-const int NeoButtons_count = 1;
-byte NeoButtons_drawingMemory[NeoButtons_count*3];         //  3 bytes per LED
-DMAMEM byte NeoButtons_displayMemory[NeoButtons_count*12]; // 12 bytes per LED
 
 /* Static Prototypes */
 static void initPins(void); // Just init the pins as input/output/input_pullup
 static void pingCheck(void); // Ultrasonic callback function
 static void printBanner(void); // Print a serial welcome banner
 static void myControlChange(byte channel, byte control, byte value); // callback handler for reading a ControlChange from Max/MSP
-static void updateNeoPixelStick(uint8_t value); // 
 static void PrintDeviceListChanges(void);
-
 
 /* Global class instances */
 ArcadeButton ArcadeButton0(PERCUSSION_STATION_BUTTON_0, PERCUSSION_STATION_LED_0, BUTTON_0);                      
@@ -97,7 +87,6 @@ NewPing ultrasonic(PERCUSSION_STATION_ULTRA_TRIG, // Trigger pin
 
 WS2812Serial NeoStick(NeoStick_count, NeoStick_displayMemory, NeoStick_drawingMemory, PERCUSSION_STATION_NEO_STRIP, WS2812_GRB);
 WS2812Serial NeoButtons(NeoButtons_count, NeoButtons_displayMemory, NeoButtons_drawingMemory, PERCUSSION_STATION_NEO_BUTTONS, WS2812_GRB);
-
 
 /**
  * Setup pinouts and serial 
@@ -271,7 +260,6 @@ void printBanner(void)
 #else
   DEBUG_PRINTLN("* Running on an unknown Teensy processor         *");
 #endif
-
   DEBUG_PRINTLN("**************************************************");
   DEBUG_PRINTLN();
 }
@@ -286,18 +274,7 @@ static void myControlChange(byte channel, byte control, byte value)
   {
     return;
   }
-  updateNeoPixelStick(value);
-}
-
-
-/**
- * Use MIDI CC value 0-127 to set neopixel indicator brightness
- */
-static void updateNeoPixelStick(uint8_t value)
-{
-  (void) value;
-  // TODO
-  return;  
+  updateNeoPixelStick(NeoStick, value);
 }
 
 
