@@ -69,6 +69,11 @@ typedef struct
   uint8_t button3_cc;
   uint8_t button4_cc;
   uint8_t button5_cc;
+  uint8_t roll_cc;
+  uint8_t pitch_cc;
+  uint8_t yaw_cc;
+  uint8_t trigger_cc;
+  uint8_t thumb_cc;
   uint8_t pbend_cc;
   uint8_t MIDI_Channel;
 } config_t;

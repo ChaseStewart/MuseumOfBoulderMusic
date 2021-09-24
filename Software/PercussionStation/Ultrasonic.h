@@ -10,7 +10,7 @@
 #ifndef __ULTRASONIC_H__
 #define __ULTRASONIC_H__
 
-/**.
+/**
  * This file is now very barebones because the NewPing library is doing the heavy-lifting for the Ultrasonic firmware 
  */
 #define P_BEND_MAX_CM 30 // adjust this for sensitivity range of pitch bend

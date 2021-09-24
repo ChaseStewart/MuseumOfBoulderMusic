@@ -18,14 +18,11 @@ static const char *StationTypeToStr(stationType_t stationType)
   switch (stationType)
   {
     case STATION_TYPE_PERCUSSION:
-      return "Percussion"; 
-      
+      return "Percussion";      
     case STATION_TYPE_MELODIC:
       return "Melodic";
-      
     case STATION_TYPE_TEST:
       return "Test";
-      
     default:
       return "Unknown";
   }
