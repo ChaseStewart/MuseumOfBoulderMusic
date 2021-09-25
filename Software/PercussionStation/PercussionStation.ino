@@ -158,11 +158,11 @@ void loop()
     
     if (thumb_state != prev_thumb_state)
     {
-      usbMIDI.sendControlChange(in_config.thumb_cc, (thumb_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HI_VAL, in_config.MIDI_Channel);   
+      usbMIDI.sendControlChange(in_config.thumb_cc, (thumb_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HIGH_VAL, in_config.MIDI_Channel);   
     }
     if (trigger_state != prev_trigger_state)
     {
-      usbMIDI.sendControlChange(in_config.trigger_cc, (trigger_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HI_VAL, in_config.MIDI_Channel);   
+      usbMIDI.sendControlChange(in_config.trigger_cc, (trigger_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HIGH_VAL, in_config.MIDI_Channel);   
     }
     if (roll != prev_roll)
     {
@@ -228,12 +228,31 @@ void loop()
     if (0 != pir_state)
     {
       digitalWrite(TEENSY_LED_PIN, HIGH);
+      ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
+      ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
+      ArcadeButton2.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
+      ArcadeButton3.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
+      ArcadeButton4.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
+      ArcadeButton5.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
+      NeoButtons.setPixel(0, 50,50,50);
+      NeoButtons.show();
+
     }
     else
     {
       digitalWrite(TEENSY_LED_PIN, LOW);
+      ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
+      ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
+      ArcadeButton2.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
+      ArcadeButton3.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
+      ArcadeButton4.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
+      ArcadeButton5.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
+      NeoButtons.clear();
+      NeoButtons.show();
     }
   }
+  prev_pir_state = pir_state;
+
 
   /* Flush any queued messages */
   usbMIDI.send_now();

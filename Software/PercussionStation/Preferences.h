@@ -46,7 +46,10 @@
 /* Button preferences */
 #define PREFS_BUTTON_DEBOUNCE_MSEC 10
 #define PREFS_BUTTON_CC_LOW_VAL 0 // what CC corresponds to button OFF
-#define PREFS_BUTTON_CC_HI_VAL 127 // what CC val corresponds to button ON
+#define PREFS_BUTTON_CC_HIGH_VAL 127 // what CC val corresponds to button ON
+#define PREFS_ARCADE_BUTTON_PWM_HIGH 200
+#define PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE 0
+#define PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE 30
 
 /* Joystick preferences */
 #define PREFS_JOYSTICK_DEBOUNCE_MSEC 300

@@ -35,10 +35,11 @@ class ArcadeButton
     bool GetReading(void);
     void CheckMIDINeedsUpdate(void);
     void SetMIDIParams(uint8_t new_channel, uint8_t new_cc);
+    void SetLowValue(uint8_t new_low_value);
 
+    unsigned long press_time;
     unsigned long update_midi_msec = 0;
     bool midi_needs_update = true;
-    unsigned long press_time;
     
   private:
     ArcadeButtonId _id;
@@ -47,9 +48,11 @@ class ArcadeButton
     int arcade_button_array[BUTTON_AVERAGING_ARRAY_LEN] = {0};
     int array_idx = 0;
     int current_reading = LOW;
-    int prev_midi_needs_update = false;
-    int _cc_parameter;
-    int _midi_channel;
+    bool prev_midi_needs_update = false;
+    uint8_t _cc_parameter;
+    uint8_t _midi_channel;
+    uint8_t _low_value;
+    uint8_t _high_value;
 };
 
 #endif /* __ARCADE_BUTTON_H__ */
