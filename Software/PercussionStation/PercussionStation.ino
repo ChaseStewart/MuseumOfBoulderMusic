@@ -33,7 +33,11 @@ DMAMEM byte NeoButtons_displayMemory[NeoButtons_count*12]; // 12 bytes per LED
 unsigned long ping_time;
 unsigned long range_in_us;
 unsigned long range_in_cm;
+unsigned long ramp_end_millis;
 
+uint8_t prev_increment = 255;
+bool ramp_is_increasing = false;
+bool ramp_is_active = false;
 bool trigger_state = LOW;
 bool prev_trigger_state = HIGH;
 bool thumb_state = LOW;
@@ -55,6 +59,7 @@ static void initPins(void); // Just init the pins as input/output/input_pullup
 static void pingCheck(void); // Ultrasonic callback function
 static void printBanner(void); // Print a serial welcome banner
 static void myControlChange(byte channel, byte control, byte value); // callback handler for reading a ControlChange from Max/MSP
+static void updateRamp(bool *outBool, bool ramp_is_increasing, unsigned long end_millis);
 
 /* Global class instances */
 ArcadeButton ArcadeButton0(PERCUSSION_STATION_BUTTON_0, PERCUSSION_STATION_LED_0, BUTTON_0);                      
@@ -225,34 +230,23 @@ void loop()
   /* Only catch state transitions */
   if (pir_state != prev_pir_state)
   {
+    ramp_is_active = true;
+    ramp_end_millis = millis() + 1000;
+    prev_increment = 255;
+    
     if (0 != pir_state)
     {
+      ramp_is_increasing = true;
       digitalWrite(TEENSY_LED_PIN, HIGH);
-      ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
-      ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
-      ArcadeButton2.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
-      ArcadeButton3.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
-      ArcadeButton4.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
-      ArcadeButton5.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE);
-      NeoButtons.setPixel(0, 50,50,50);
-      NeoButtons.show();
-
     }
     else
     {
+      ramp_is_increasing = false;
       digitalWrite(TEENSY_LED_PIN, LOW);
-      ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
-      ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
-      ArcadeButton2.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
-      ArcadeButton3.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
-      ArcadeButton4.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
-      ArcadeButton5.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE);
-      NeoButtons.clear();
-      NeoButtons.show();
     }
   }
   prev_pir_state = pir_state;
-
+  updateRamp(&ramp_is_active, &prev_increment, ramp_is_increasing, ramp_end_millis);
 
   /* Flush any queued messages */
   usbMIDI.send_now();
@@ -343,4 +337,47 @@ static void myControlChange(byte channel, byte control, byte value)
     return;
   }
   updateNeoPixelStick(NeoStick, value);
+}
+
+
+static void updateRamp(bool *outBool, uint8_t *prevIncrement, bool ramp_is_increasing, unsigned long end_millis)
+{
+  if (false == *outBool) return;
+  
+  unsigned long currentMillis = millis();
+  if (currentMillis > end_millis) 
+  {
+    *outBool = false;
+    return;
+  }
+  
+  uint8_t increment = (1000 - (end_millis - currentMillis)) / 100;
+  
+  if (increment != *prevIncrement)
+  {
+    Serial.printf("Increment=%d, currMillis=%d, endMillis=%d\r\n", increment, currentMillis, end_millis);
+    if (ramp_is_increasing)
+    {
+        ArcadeButton0.SetLowValue(5*increment);
+        ArcadeButton1.SetLowValue(5*increment);
+        ArcadeButton2.SetLowValue(5*increment);
+        ArcadeButton3.SetLowValue(5*increment);
+        ArcadeButton4.SetLowValue(5*increment);
+        ArcadeButton5.SetLowValue(5*increment);
+        NeoButtons.setPixel(0, 5*increment,5*increment,5*increment);
+        NeoButtons.show();
+    }
+    else
+    {
+        ArcadeButton0.SetLowValue(50 - 5*increment);
+        ArcadeButton1.SetLowValue(50 - 5*increment);
+        ArcadeButton2.SetLowValue(50 - 5*increment);
+        ArcadeButton3.SetLowValue(50 - 5*increment);
+        ArcadeButton4.SetLowValue(50 - 5*increment);
+        ArcadeButton5.SetLowValue(50 - 5*increment);
+        NeoButtons.setPixel(0, 50-5*increment,50-5*increment,50-5*increment);
+        NeoButtons.show();  
+    }
+    *prevIncrement = increment;
+  }
 }
