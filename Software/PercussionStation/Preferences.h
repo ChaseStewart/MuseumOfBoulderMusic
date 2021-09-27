@@ -78,6 +78,7 @@ typedef struct
   uint8_t trigger_cc;
   uint8_t thumb_cc;
   uint8_t pbend_cc;
+  uint8_t presence_cc;
   uint8_t MIDI_Channel;
 } config_t;
 

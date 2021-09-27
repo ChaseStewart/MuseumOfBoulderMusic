@@ -38,14 +38,6 @@ unsigned long ramp_end_millis;
 uint8_t prev_increment = 255;
 bool ramp_is_increasing = false;
 bool ramp_is_active = false;
-bool trigger_state = LOW;
-bool prev_trigger_state = HIGH;
-bool thumb_state = LOW;
-bool prev_thumb_state = HIGH;
-
-uint8_t prev_roll = 0;
-uint8_t prev_pitch = 0;
-uint8_t prev_yaw = 0;
 
 
 bool pir_state = LOW;
@@ -101,18 +93,19 @@ void setup()
   myusb.begin();
 
   // Arduino does not seem to support designated initializers
-  in_config.button0_cc = MIDI_GEN_PURPOSE_1;
-  in_config.button1_cc = MIDI_GEN_PURPOSE_2;
-  in_config.button2_cc = MIDI_GEN_PURPOSE_3;
-  in_config.button3_cc = MIDI_GEN_PURPOSE_4;
-  in_config.button4_cc = MIDI_GEN_PURPOSE_5;
-  in_config.button5_cc = MIDI_GEN_PURPOSE_6;
-  in_config.pbend_cc   = MIDI_GEN_PURPOSE_7;
-  in_config.roll_cc    = MIDI_EFFECT_1_DEPTH;
-  in_config.pitch_cc   = MIDI_EFFECT_2_DEPTH;
-  in_config.yaw_cc     = MIDI_EFFECT_3_DEPTH;
-  in_config.trigger_cc = MIDI_EFFECT_4_DEPTH;
-  in_config.thumb_cc   = MIDI_EFFECT_5_DEPTH;
+  in_config.button0_cc  = MIDI_GEN_PURPOSE_1;
+  in_config.button1_cc  = MIDI_GEN_PURPOSE_2;
+  in_config.button2_cc  = MIDI_GEN_PURPOSE_3;
+  in_config.button3_cc  = MIDI_GEN_PURPOSE_4;
+  in_config.button4_cc  = MIDI_GEN_PURPOSE_5;
+  in_config.button5_cc  = MIDI_GEN_PURPOSE_6;
+  in_config.pbend_cc    = MIDI_GEN_PURPOSE_7;
+  in_config.roll_cc     = MIDI_EFFECT_1_DEPTH;
+  in_config.pitch_cc    = MIDI_EFFECT_2_DEPTH;
+  in_config.yaw_cc      = MIDI_EFFECT_3_DEPTH;
+  in_config.trigger_cc  = MIDI_EFFECT_4_DEPTH;
+  in_config.thumb_cc    = MIDI_EFFECT_5_DEPTH;
+  in_config.presence_cc = MIDI_CTRL_CHG_EFFECT_1;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
 
   ArcadeButton0.SetMIDIParams(in_config.MIDI_Channel, in_config.button0_cc);
@@ -144,54 +137,7 @@ void loop()
   /* get updates from usbHost */
   myusb.Task();
   PrintDeviceListChanges();
-
-  /* TODO move all of this into USBJoystick.x */
-  if (joysticks.available()) 
-  {
-    /* Get joystick button state */
-    uint32_t buttons = joysticks.getButtons();
-    thumb_state = (buttons & BUTTON_MASK_THUMB);
-    trigger_state = (buttons & BUTTON_MASK_TRIGGER);
-
-    /* Get joystick axis state */
-    uint32_t raw_pitch = joysticks.getAxis(JOYSTICK_AXIS_PITCH) / 8;
-    uint8_t pitch = (uint8_t) constrain(raw_pitch, 0, 127);
-    uint32_t raw_roll = joysticks.getAxis(JOYSTICK_AXIS_ROLL) / 8;
-    uint8_t roll = (uint8_t) constrain(raw_roll, 0, 127);
-    uint32_t raw_yaw = joysticks.getAxis(JOYSTICK_AXIS_YAW) / 2;
-    uint8_t yaw = (uint8_t) constrain(raw_yaw, 0, 127);
-    
-    if (thumb_state != prev_thumb_state)
-    {
-      usbMIDI.sendControlChange(in_config.thumb_cc, (thumb_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HIGH_VAL, in_config.MIDI_Channel);   
-    }
-    if (trigger_state != prev_trigger_state)
-    {
-      usbMIDI.sendControlChange(in_config.trigger_cc, (trigger_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HIGH_VAL, in_config.MIDI_Channel);   
-    }
-    if (roll != prev_roll)
-    {
-      usbMIDI.sendControlChange(in_config.roll_cc,  roll,  in_config.MIDI_Channel);
-    }
-    if (pitch != prev_pitch)
-    {
-      usbMIDI.sendControlChange(in_config.pitch_cc, pitch, in_config.MIDI_Channel);
-    }
-    if (yaw != prev_yaw)
-    {
-      usbMIDI.sendControlChange(in_config.yaw_cc, yaw,     in_config.MIDI_Channel);
-    }
-   
-    joysticks.joystickDataClear();
-
-    prev_thumb_state = thumb_state;
-    prev_trigger_state = trigger_state;
-    prev_roll = roll;
-    prev_yaw = yaw;
-    prev_pitch = pitch;
-  }
-  
-
+  UpdateJoystick(in_config);
   
   /* Get Ultrasonic Distance sensor reading */
   if (micros() >= ping_time)
@@ -231,7 +177,7 @@ void loop()
   if (pir_state != prev_pir_state)
   {
     ramp_is_active = true;
-    ramp_end_millis = millis() + 1000;
+    ramp_end_millis = millis() + 500;
     prev_increment = 255;
     
     if (0 != pir_state)
@@ -351,11 +297,10 @@ static void updateRamp(bool *outBool, uint8_t *prevIncrement, bool ramp_is_incre
     return;
   }
   
-  uint8_t increment = (1000 - (end_millis - currentMillis)) / 100;
+  uint8_t increment = (500 - (end_millis - currentMillis)) / 50;
   
-  if (increment != *prevIncrement)
+  if (increment != *prevIncrement && increment < 10)
   {
-    Serial.printf("Increment=%d, currMillis=%d, endMillis=%d\r\n", increment, currentMillis, end_millis);
     if (ramp_is_increasing)
     {
         ArcadeButton0.SetLowValue(5*increment);
@@ -364,6 +309,7 @@ static void updateRamp(bool *outBool, uint8_t *prevIncrement, bool ramp_is_incre
         ArcadeButton3.SetLowValue(5*increment);
         ArcadeButton4.SetLowValue(5*increment);
         ArcadeButton5.SetLowValue(5*increment);
+        usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
         NeoButtons.setPixel(0, 5*increment,5*increment,5*increment);
         NeoButtons.show();
     }
@@ -376,6 +322,7 @@ static void updateRamp(bool *outBool, uint8_t *prevIncrement, bool ramp_is_incre
         ArcadeButton4.SetLowValue(50 - 5*increment);
         ArcadeButton5.SetLowValue(50 - 5*increment);
         NeoButtons.setPixel(0, 50-5*increment,50-5*increment,50-5*increment);
+        usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
         NeoButtons.show();  
     }
     *prevIncrement = increment;
