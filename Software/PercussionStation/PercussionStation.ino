@@ -33,7 +33,7 @@ DMAMEM byte NeoButtons_displayMemory[NeoButtons_count*12]; // 12 bytes per LED
 unsigned long ping_time;
 unsigned long range_in_us;
 unsigned long range_in_cm;
-unsigned long ramp_end_millis;
+unsigned long ramp_start_millis;
 
 uint8_t prev_increment = 255;
 bool ramp_is_increasing = false;
@@ -51,7 +51,7 @@ static void initPins(void); // Just init the pins as input/output/input_pullup
 static void pingCheck(void); // Ultrasonic callback function
 static void printBanner(void); // Print a serial welcome banner
 static void myControlChange(byte channel, byte control, byte value); // callback handler for reading a ControlChange from Max/MSP
-static void updateRamp(bool *outBool, bool ramp_is_increasing, unsigned long end_millis);
+static void updateRamp(bool *outBool, bool ramp_is_increasing, unsigned long start_millis);
 
 /* Global class instances */
 ArcadeButton ArcadeButton0(PERCUSSION_STATION_BUTTON_0, PERCUSSION_STATION_LED_0, BUTTON_0);                      
@@ -177,7 +177,7 @@ void loop()
   if (pir_state != prev_pir_state)
   {
     ramp_is_active = true;
-    ramp_end_millis = millis() + 500;
+    ramp_start_millis = millis();
     prev_increment = 255;
     
     if (0 != pir_state)
@@ -192,7 +192,7 @@ void loop()
     }
   }
   prev_pir_state = pir_state;
-  updateRamp(&ramp_is_active, &prev_increment, ramp_is_increasing, ramp_end_millis);
+  updateRamp(&ramp_is_active, &prev_increment, ramp_is_increasing, ramp_start_millis);
 
   /* Flush any queued messages */
   usbMIDI.send_now();
@@ -286,20 +286,20 @@ static void myControlChange(byte channel, byte control, byte value)
 }
 
 
-static void updateRamp(bool *outBool, uint8_t *prevIncrement, bool ramp_is_increasing, unsigned long end_millis)
+static void updateRamp(bool *outBool, uint8_t *prevIncrement, bool ramp_is_increasing, unsigned long start_millis)
 {
   if (false == *outBool) return;
   
   unsigned long currentMillis = millis();
-  if (currentMillis > end_millis) 
+  if (currentMillis - start_millis > PREFS_RAMP_PERIOD) 
   {
     *outBool = false;
     return;
   }
   
-  uint8_t increment = (500 - (end_millis - currentMillis)) / 50;
+  uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
   
-  if (increment != *prevIncrement && increment < 10)
+  if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
   {
     if (ramp_is_increasing)
     {

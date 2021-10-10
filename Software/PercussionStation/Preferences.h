@@ -61,6 +61,9 @@
 #define PREFS_MIDI_INPUT_CHANNEL   MIDI_CHANNEL_15
 #define PREFS_MIDI_INPUT_CC        MIDI_GEN_PURPOSE_8   
 
+#define PREFS_RAMP_PERIOD 500
+#define PREFS_RAMP_INCREMENTS 10
+
 /**
  * Struct that holds configuration for PercussionStation 
  */
