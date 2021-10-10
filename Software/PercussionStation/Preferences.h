@@ -63,6 +63,7 @@
 
 #define PREFS_RAMP_PERIOD 500
 #define PREFS_RAMP_INCREMENTS 10
+#define PREFS_ACTIVITY_TIMEOUT 10000 // 10 seconds 
 
 /**
  * Struct that holds configuration for PercussionStation 

@@ -44,5 +44,6 @@ const uint32_t BUTTON_MASK_THUMB   = 0x2;
 
 void PrintDeviceListChanges(void); // Helper function from Paul Stoffregen to print added or removed devices 
 void UpdateJoystick(config_t in_config);
+bool JoystickIsPressed(void);
 
 #endif // __USB_JOYSTICK_H__

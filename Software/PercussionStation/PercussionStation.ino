@@ -34,10 +34,14 @@ unsigned long ping_time;
 unsigned long range_in_us;
 unsigned long range_in_cm;
 unsigned long ramp_start_millis;
+unsigned long last_activity;
 
 uint8_t prev_increment = 255;
 bool ramp_is_increasing = false;
 bool ramp_is_active = false;
+
+bool current_presence = false;
+bool prev_presence = false;
 
 
 bool pir_state = LOW;
@@ -173,8 +177,27 @@ void loop()
   /* Handle PIR sensor */
   pir_state = digitalRead(PERCUSSION_STATION_PIR_SENS);
 
-  /* Only catch state transitions */
-  if (pir_state != prev_pir_state)
+
+  current_presence = (pir_state | 
+                      ArcadeButton0.GetReading() |
+                      ArcadeButton1.GetReading() |
+                      ArcadeButton2.GetReading() |
+                      ArcadeButton3.GetReading() |
+                      ArcadeButton4.GetReading() |
+                      ArcadeButton5.GetReading() |
+                      JoystickIsPressed() |
+                      ultrasonic.check_timer()
+                      );
+
+  digitalWrite(TEENSY_LED_PIN, current_presence);
+  
+  if (current_presence)
+  {
+      last_activity = millis();
+  }
+
+  /* Only catch state transition */
+  if (current_presence && !prev_presence)
   {
     ramp_is_active = true;
     ramp_start_millis = millis();
@@ -183,14 +206,17 @@ void loop()
     if (0 != pir_state)
     {
       ramp_is_increasing = true;
-      digitalWrite(TEENSY_LED_PIN, HIGH);
-    }
-    else
-    {
-      ramp_is_increasing = false;
-      digitalWrite(TEENSY_LED_PIN, LOW);
     }
   }
+  else if (!current_presence && !prev_presence && millis() - last_activity > PREFS_ACTIVITY_TIMEOUT)
+  {
+    ramp_is_active = true;
+    ramp_is_increasing = false;
+    ramp_start_millis = millis();
+    prev_increment = 255;
+  }
+
+  
   prev_pir_state = pir_state;
   updateRamp(&ramp_is_active, &prev_increment, ramp_is_increasing, ramp_start_millis);
 

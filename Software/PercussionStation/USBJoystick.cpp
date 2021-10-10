@@ -143,3 +143,30 @@ void UpdateJoystick(config_t in_config)
     prev_pitch = pitch;
   }
 }
+
+
+bool JoystickIsPressed()
+{
+  if (joysticks.available()) 
+  {
+    uint32_t buttons = joysticks.getButtons();
+    
+    /* Get joystick axis state */
+    uint32_t raw_pitch = joysticks.getAxis(JOYSTICK_AXIS_PITCH) / 8;
+    uint8_t pitch = (uint8_t) constrain(raw_pitch, 0, 127);
+    
+    uint32_t raw_roll = joysticks.getAxis(JOYSTICK_AXIS_ROLL) / 8;
+    uint8_t roll = (uint8_t) constrain(raw_roll, 0, 127);
+    
+    uint32_t raw_yaw = joysticks.getAxis(JOYSTICK_AXIS_YAW) / 2;
+    uint8_t yaw = (uint8_t) constrain(raw_yaw, 0, 127);
+    
+    return ((0 != joysticks.getButtons()) |  
+                  pitch != prev_pitch |
+                  roll != prev_roll |
+                  yaw != prev_yaw
+           );
+  }
+  
+  return false; // if joystick not available
+}
