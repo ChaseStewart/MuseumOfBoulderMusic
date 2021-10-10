@@ -43,10 +43,10 @@ void ArcadeButton::Update(void)
   {
     analogWrite(_led, (midi_needs_update) ? _high_value : _low_value);
     usbMIDI.sendControlChange(_cc_parameter, (midi_needs_update) ? PREFS_BUTTON_CC_LOW_VAL : PREFS_BUTTON_CC_HIGH_VAL, _midi_channel);
-    DEBUG_PRINT("Button ");
-    DEBUG_PRINT((int)_id);
-    DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(midi_needs_update);
+    //DEBUG_PRINT("Button ");
+    //DEBUG_PRINT((int)_id);
+    //DEBUG_PRINT(" = ");
+    //DEBUG_PRINTLN(midi_needs_update);
   }
 
   prev_midi_needs_update = midi_needs_update;

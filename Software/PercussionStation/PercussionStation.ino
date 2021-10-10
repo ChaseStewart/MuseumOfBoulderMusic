@@ -43,6 +43,9 @@ bool ramp_is_active = false;
 bool current_presence = false;
 bool prev_presence = false;
 
+bool is_ramped_up = false;
+bool is_ramped_down = false;
+
 
 bool pir_state = LOW;
 bool prev_pir_state = HIGH;
@@ -55,7 +58,8 @@ static void initPins(void); // Just init the pins as input/output/input_pullup
 static void pingCheck(void); // Ultrasonic callback function
 static void printBanner(void); // Print a serial welcome banner
 static void myControlChange(byte channel, byte control, byte value); // callback handler for reading a ControlChange from Max/MSP
-static void updateRamp(bool *outBool, bool ramp_is_increasing, unsigned long start_millis);
+static void rampUp(bool *outBool, bool ramp_is_increasing, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down);
+static void rampDown(bool *outBool, bool ramp_is_increasing, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up);
 
 /* Global class instances */
 ArcadeButton ArcadeButton0(PERCUSSION_STATION_BUTTON_0, PERCUSSION_STATION_LED_0, BUTTON_0);                      
@@ -131,6 +135,7 @@ void setup()
   
   NeoButtons.show();
   NeoStick.show();
+  digitalWrite(TEENSY_LED_PIN, LOW);
 }
 
 /**
@@ -151,6 +156,7 @@ void loop()
     range_in_cm = range_in_us / US_ROUNDTRIP_CM;
     ping_time += PREFS_ULTRA_PING_PERIOD;
   }
+
 
   /* constrain range_in_cm, but sufficiently low values are treated as high ones */
   if ((range_in_cm < P_BEND_MIN_CM) || (range_in_cm > P_BEND_MAX_CM))
@@ -177,48 +183,60 @@ void loop()
   /* Handle PIR sensor */
   pir_state = digitalRead(PERCUSSION_STATION_PIR_SENS);
 
-
   current_presence = (pir_state | 
-                      ArcadeButton0.GetReading() |
-                      ArcadeButton1.GetReading() |
-                      ArcadeButton2.GetReading() |
-                      ArcadeButton3.GetReading() |
-                      ArcadeButton4.GetReading() |
-                      ArcadeButton5.GetReading() |
+                      !ArcadeButton0.GetReading() |
+                      !ArcadeButton1.GetReading() |
+                      !ArcadeButton2.GetReading() |
+                      !ArcadeButton3.GetReading() |
+                      !ArcadeButton4.GetReading() |
+                      !ArcadeButton5.GetReading() |
                       JoystickIsPressed() |
                       ultrasonic.check_timer()
                       );
-
-  digitalWrite(TEENSY_LED_PIN, current_presence);
   
   if (current_presence)
   {
       last_activity = millis();
   }
 
+  //Serial.printf("\r");
+  //Serial.printf("CBV=%d, cp=%d, pp=%d, ramp=%d, millis=%lu, lastA=%lu", curr_bend_val, current_presence, prev_presence, ramp_is_active, millis(), last_activity);
+
+
+  digitalWrite(TEENSY_LED_PIN, pir_state);  
+
   /* Only catch state transition */
-  if (current_presence && !prev_presence)
+  if (!ramp_is_active && !ramp_is_increasing && current_presence && !prev_presence)
   {
     ramp_is_active = true;
     ramp_start_millis = millis();
     prev_increment = 255;
-    
-    if (0 != pir_state)
-    {
-      ramp_is_increasing = true;
-    }
+    ramp_is_increasing = true;
   }
-  else if (!current_presence && !prev_presence && millis() - last_activity > PREFS_ACTIVITY_TIMEOUT)
+  if (!ramp_is_active && ramp_is_increasing && millis() - last_activity > PREFS_ACTIVITY_TIMEOUT)
   {
     ramp_is_active = true;
-    ramp_is_increasing = false;
     ramp_start_millis = millis();
     prev_increment = 255;
+    ramp_is_increasing = false;
   }
 
-  
+  if (millis() - ramp_start_millis > PREFS_RAMP_PERIOD)
+  {
+    ramp_is_active = false;  
+  }
+
+  prev_presence = current_presence;
   prev_pir_state = pir_state;
-  updateRamp(&ramp_is_active, &prev_increment, ramp_is_increasing, ramp_start_millis);
+
+  if (ramp_is_active && ramp_is_increasing)
+  {
+    rampUp(&ramp_is_active, &prev_increment, ramp_start_millis, &is_ramped_up, &is_ramped_down);
+  }
+  else if (ramp_is_active && !ramp_is_increasing)
+  {
+    rampDown(&ramp_is_active, &prev_increment, ramp_start_millis, &is_ramped_down, &is_ramped_up);  
+  }
 
   /* Flush any queued messages */
   usbMIDI.send_now();
@@ -312,45 +330,63 @@ static void myControlChange(byte channel, byte control, byte value)
 }
 
 
-static void updateRamp(bool *outBool, uint8_t *prevIncrement, bool ramp_is_increasing, unsigned long start_millis)
+static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down)
 {
+  if (true == *is_ramped_up) return;
   if (false == *outBool) return;
   
   unsigned long currentMillis = millis();
   if (currentMillis - start_millis > PREFS_RAMP_PERIOD) 
   {
     *outBool = false;
+    *is_ramped_down = false;
+    *is_ramped_up = true;
     return;
   }
   
   uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
-  
   if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
   {
-    if (ramp_is_increasing)
-    {
-        ArcadeButton0.SetLowValue(5*increment);
-        ArcadeButton1.SetLowValue(5*increment);
-        ArcadeButton2.SetLowValue(5*increment);
-        ArcadeButton3.SetLowValue(5*increment);
-        ArcadeButton4.SetLowValue(5*increment);
-        ArcadeButton5.SetLowValue(5*increment);
-        usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
-        NeoButtons.setPixel(0, 5*increment,5*increment,5*increment);
-        NeoButtons.show();
-    }
-    else
-    {
-        ArcadeButton0.SetLowValue(50 - 5*increment);
-        ArcadeButton1.SetLowValue(50 - 5*increment);
-        ArcadeButton2.SetLowValue(50 - 5*increment);
-        ArcadeButton3.SetLowValue(50 - 5*increment);
-        ArcadeButton4.SetLowValue(50 - 5*increment);
-        ArcadeButton5.SetLowValue(50 - 5*increment);
-        NeoButtons.setPixel(0, 50-5*increment,50-5*increment,50-5*increment);
-        usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
-        NeoButtons.show();  
-    }
+    ArcadeButton0.SetLowValue(5*increment);
+    ArcadeButton1.SetLowValue(5*increment);
+    ArcadeButton2.SetLowValue(5*increment);
+    ArcadeButton3.SetLowValue(5*increment);
+    ArcadeButton4.SetLowValue(5*increment);
+    ArcadeButton5.SetLowValue(5*increment);
+    usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
+    NeoButtons.setPixel(0, 5*increment,5*increment,5*increment);
+    NeoButtons.show();
+    *prevIncrement = increment;
+  }
+}
+
+
+static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up)
+{
+  if (true == *is_ramped_down) return;
+  if (false == *outBool) return;
+  
+  unsigned long currentMillis = millis();
+  if (currentMillis - start_millis > PREFS_RAMP_PERIOD) 
+  {
+    *outBool = false;
+    *is_ramped_down = true;
+    *is_ramped_up = false; 
+    return;
+  }
+  
+  uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
+  if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
+  {
+    ArcadeButton0.SetLowValue(50 - 5*increment);
+    ArcadeButton1.SetLowValue(50 - 5*increment);
+    ArcadeButton2.SetLowValue(50 - 5*increment);
+    ArcadeButton3.SetLowValue(50 - 5*increment);
+    ArcadeButton4.SetLowValue(50 - 5*increment);
+    ArcadeButton5.SetLowValue(50 - 5*increment);
+    NeoButtons.setPixel(0, 50-5*increment,50-5*increment,50-5*increment);
+    usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
+    NeoButtons.show();  
     *prevIncrement = increment;
   }
 }
