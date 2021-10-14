@@ -101,19 +101,22 @@ void setup()
   myusb.begin();
 
   // Arduino does not seem to support designated initializers
-  in_config.button0_cc  = MIDI_GEN_PURPOSE_1;
-  in_config.button1_cc  = MIDI_GEN_PURPOSE_2;
-  in_config.button2_cc  = MIDI_GEN_PURPOSE_3;
-  in_config.button3_cc  = MIDI_GEN_PURPOSE_4;
-  in_config.button4_cc  = MIDI_GEN_PURPOSE_5;
-  in_config.button5_cc  = MIDI_GEN_PURPOSE_6;
-  in_config.pbend_cc    = MIDI_GEN_PURPOSE_7;
-  in_config.roll_cc     = MIDI_EFFECT_1_DEPTH;
-  in_config.pitch_cc    = MIDI_EFFECT_2_DEPTH;
-  in_config.yaw_cc      = MIDI_EFFECT_3_DEPTH;
-  in_config.trigger_cc  = MIDI_EFFECT_4_DEPTH;
-  in_config.thumb_cc    = MIDI_EFFECT_5_DEPTH;
-  in_config.presence_cc = MIDI_CTRL_CHG_EFFECT_1;
+  in_config.button0_cc   = MIDI_GEN_PURPOSE_1;
+  in_config.button1_cc   = MIDI_GEN_PURPOSE_2;
+  in_config.button2_cc   = MIDI_GEN_PURPOSE_3;
+  in_config.button3_cc   = MIDI_GEN_PURPOSE_4;
+  in_config.button4_cc   = MIDI_GEN_PURPOSE_5;
+  in_config.button5_cc   = MIDI_GEN_PURPOSE_6;
+  in_config.pbend_cc     = MIDI_GEN_PURPOSE_7;
+  in_config.roll_pos_cc  = MIDI_EFFECT_1_DEPTH;
+  in_config.roll_neg_cc  = MIDI_EFFECT_2_DEPTH;
+  in_config.pitch_pos_cc = MIDI_EFFECT_3_DEPTH;
+  in_config.pitch_neg_cc = MIDI_EFFECT_4_DEPTH;
+  in_config.yaw_pos_cc   = MIDI_EFFECT_5_DEPTH;
+  in_config.yaw_neg_cc   = MIDI_CTRL_CHG_EFFECT_1;
+  in_config.trigger_cc   = MIDI_CTRL_CHG_EFFECT_2;
+  in_config.thumb_cc     = MIDI_UNDEFINED_0;
+  in_config.presence_cc  = MIDI_UNDEFINED_1;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
 
   ArcadeButton0.SetMIDIParams(in_config.MIDI_Channel, in_config.button0_cc);
@@ -198,11 +201,8 @@ void loop()
   {
       last_activity = millis();
   }
-
-  //Serial.printf("\r");
-  //Serial.printf("CBV=%d, cp=%d, pp=%d, ramp=%d, millis=%lu, lastA=%lu", curr_bend_val, current_presence, prev_presence, ramp_is_active, millis(), last_activity);
-
-
+  
+  /* Debug for PIR state- we can turn this off if it becomes distracting */
   digitalWrite(TEENSY_LED_PIN, pir_state);  
 
   /* Only catch state transition */

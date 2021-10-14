@@ -53,6 +53,8 @@
 
 /* Joystick preferences */
 #define PREFS_JOYSTICK_DEBOUNCE_MSEC 300
+#define PREFS_JOYSTICK_DEADZONE_LOW 124
+#define PREFS_JOYSTICK_DEADZONE_HIGH 131
 
 /* Linear potentiometer preferences */
 #define PREFS_LIN_POT_MIN_READING 10
@@ -76,9 +78,12 @@ typedef struct
   uint8_t button3_cc;
   uint8_t button4_cc;
   uint8_t button5_cc;
-  uint8_t roll_cc;
-  uint8_t pitch_cc;
-  uint8_t yaw_cc;
+  uint8_t roll_pos_cc;
+  uint8_t roll_neg_cc;
+  uint8_t pitch_pos_cc;
+  uint8_t pitch_neg_cc;
+  uint8_t yaw_pos_cc;
+  uint8_t yaw_neg_cc;
   uint8_t trigger_cc;
   uint8_t thumb_cc;
   uint8_t pbend_cc;
