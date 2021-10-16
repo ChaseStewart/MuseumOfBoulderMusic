@@ -38,5 +38,4 @@ void printNonvolConfig(void)
   DEBUG_PRINTLN("*** DONE ***");
   DEBUG_PRINTLN();
 }
-
  

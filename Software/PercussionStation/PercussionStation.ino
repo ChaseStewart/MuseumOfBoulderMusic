@@ -22,44 +22,42 @@
 #include "NeoPixel.h"
 #include "USBJoystick.h"
 
-
+/* Memory arrays required by NeoPixel library */
 byte NeoStick_drawingMemory[NeoStick_count*3];         //  3 bytes per LED
 DMAMEM byte NeoStick_displayMemory[NeoStick_count*12]; // 12 bytes per LED
 
-byte NeoButtons_drawingMemory[NeoButtons_count*3];         //  3 bytes per LED
-DMAMEM byte NeoButtons_displayMemory[NeoButtons_count*12]; // 12 bytes per LED
+/* Config mapping of MIDI channels/ CCs */
+config_t in_config = {0};
 
-/* Globals */
+/* Pitch bend variables */
 unsigned long ping_time;
 unsigned long range_in_us;
 unsigned long range_in_cm;
+int curr_bend_val = 1;
+int prev_bend_val = 0;
+
+/* PIR variables */
+bool pir_state = LOW;
+bool prev_pir_state = HIGH;
+
+/* Presence detection variables */
 unsigned long ramp_start_millis;
 unsigned long last_activity;
-
 uint8_t prev_increment = 255;
 bool ramp_is_increasing = false;
 bool ramp_is_active = false;
-
 bool current_presence = false;
 bool prev_presence = false;
-
 bool is_ramped_up = false;
 bool is_ramped_down = false;
-
-
-bool pir_state = LOW;
-bool prev_pir_state = HIGH;
-int curr_bend_val = 1;
-int prev_bend_val = 0;
-config_t in_config = {0};
 
 /* Static Prototypes */
 static void initPins(void); // Just init the pins as input/output/input_pullup
 static void pingCheck(void); // Ultrasonic callback function
 static void printBanner(void); // Print a serial welcome banner
 static void myControlChange(byte channel, byte control, byte value); // callback handler for reading a ControlChange from Max/MSP
-static void rampUp(bool *outBool, bool ramp_is_increasing, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down);
-static void rampDown(bool *outBool, bool ramp_is_increasing, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up);
+static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down);
+static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up);
 
 /* Global class instances */
 ArcadeButton ArcadeButton0(PERCUSSION_STATION_BUTTON_0, PERCUSSION_STATION_LED_0, BUTTON_0);                      
@@ -78,12 +76,6 @@ WS2812Serial NeoStick(NeoStick_count,
                       NeoStick_drawingMemory, 
                       PERCUSSION_STATION_NEO_STRIP, 
                       WS2812_GRB);
-                      
-WS2812Serial NeoButtons(NeoButtons_count,
-                        NeoButtons_displayMemory, 
-                        NeoButtons_drawingMemory, 
-                        PERCUSSION_STATION_NEO_BUTTONS, 
-                        WS2812_GRB);
 
 /**
  * Setup pinouts and serial 
@@ -97,7 +89,6 @@ void setup()
   usbMIDI.setHandleControlChange(myControlChange);
     
   NeoStick.begin();
-  NeoButtons.begin();
   myusb.begin();
 
   // Arduino does not seem to support designated initializers
@@ -133,16 +124,13 @@ void setup()
   printBanner();
   printNonvolConfig();
 
-  NeoButtons.clear();
   NeoStick.clear();
-  
-  NeoButtons.show();
   NeoStick.show();
   digitalWrite(TEENSY_LED_PIN, LOW);
 }
 
 /**
- * Just print all sensor outputs to serial to ensure proper functionality
+ * Process sensor inputs to generate proper MIDI messages and LED feedback
  */
 void loop() 
 {
@@ -186,6 +174,12 @@ void loop()
   /* Handle PIR sensor */
   pir_state = digitalRead(PERCUSSION_STATION_PIR_SENS);
 
+  /**
+   * Presence is a momentary state defined as:
+   * PIR presence detected, OR
+   * Arcade buttons pressed, OR
+   * either Ultrasonic Sensor is changing values
+   */
   current_presence = (pir_state | 
                       !ArcadeButton0.GetReading() |
                       !ArcadeButton1.GetReading() |
@@ -197,6 +191,7 @@ void loop()
                       ultrasonic.check_timer()
                       );
   
+  /* Keep pushing the timeout time forward if presence is still detected */
   if (current_presence)
   {
       last_activity = millis();
@@ -205,7 +200,12 @@ void loop()
   /* Debug for PIR state- we can turn this off if it becomes distracting */
   digitalWrite(TEENSY_LED_PIN, pir_state);  
 
-  /* Only catch state transition */
+  /**
+   * Start rampUp() if we meet the following criteria: 
+   * 1. We just had presence this loop, 
+   * 2. ramp isn't running, 
+   * 3. we previously ramped down 
+   */
   if (!ramp_is_active && !ramp_is_increasing && current_presence && !prev_presence)
   {
     ramp_is_active = true;
@@ -213,7 +213,14 @@ void loop()
     prev_increment = 255;
     ramp_is_increasing = true;
   }
-  if (!ramp_is_active && ramp_is_increasing && millis() - last_activity > PREFS_ACTIVITY_TIMEOUT)
+  
+  /**
+   * Start rampDown() if we meet the following criteria: 
+   * 1. We have had absence for PREFS_ACTIVITY_TIMEOUT, 
+   * 2. ramp isn't running, 
+   * 3. we previously ramped up 
+   */
+   if (!ramp_is_active && ramp_is_increasing && millis() - last_activity > PREFS_ACTIVITY_TIMEOUT)
   {
     ramp_is_active = true;
     ramp_start_millis = millis();
@@ -221,14 +228,13 @@ void loop()
     ramp_is_increasing = false;
   }
 
+  /* Stop the ramp from running PREFS_RAMP_PERIOD millis() after the ramp */ 
   if (millis() - ramp_start_millis > PREFS_RAMP_PERIOD)
   {
     ramp_is_active = false;  
   }
 
-  prev_presence = current_presence;
-  prev_pir_state = pir_state;
-
+  /* Call rampUp() or rampDown() if appropriate */
   if (ramp_is_active && ramp_is_increasing)
   {
     rampUp(&ramp_is_active, &prev_increment, ramp_start_millis, &is_ramped_up, &is_ramped_down);
@@ -237,6 +243,8 @@ void loop()
   {
     rampDown(&ramp_is_active, &prev_increment, ramp_start_millis, &is_ramped_down, &is_ramped_up);  
   }
+  prev_presence = current_presence;
+  prev_pir_state = pir_state;
 
   /* Flush any queued messages */
   usbMIDI.send_now();
@@ -278,7 +286,6 @@ static void initPins(void)
   pinMode(PERCUSSION_STATION_LED_3, OUTPUT);
   pinMode(PERCUSSION_STATION_LED_4, OUTPUT);
   pinMode(PERCUSSION_STATION_LED_5, OUTPUT);
-
   pinMode(TEENSY_LED_PIN, OUTPUT);
   digitalWrite(TEENSY_LED_PIN, LOW);
 }
@@ -329,7 +336,9 @@ static void myControlChange(byte channel, byte control, byte value)
   updateNeoPixelStick(NeoStick, value);
 }
 
-
+/**
+ * Create a non-blocking ramp up from absence to presence. 
+ */
 static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down)
 {
   if (true == *is_ramped_up) return;
@@ -354,13 +363,14 @@ static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_mi
     ArcadeButton4.SetLowValue(5*increment);
     ArcadeButton5.SetLowValue(5*increment);
     usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
-    NeoButtons.setPixel(0, 5*increment,5*increment,5*increment);
-    NeoButtons.show();
     *prevIncrement = increment;
   }
 }
 
 
+/**
+ * Create a non-blocking ramp down from presence to absence. 
+ */
 static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up)
 {
   if (true == *is_ramped_down) return;
@@ -384,9 +394,7 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
     ArcadeButton3.SetLowValue(50 - 5*increment);
     ArcadeButton4.SetLowValue(50 - 5*increment);
     ArcadeButton5.SetLowValue(50 - 5*increment);
-    NeoButtons.setPixel(0, 50-5*increment,50-5*increment,50-5*increment);
     usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
-    NeoButtons.show();  
     *prevIncrement = increment;
   }
 }

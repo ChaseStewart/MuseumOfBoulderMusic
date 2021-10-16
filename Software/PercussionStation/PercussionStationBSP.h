@@ -19,7 +19,6 @@
 #define SCB_AIRCR (*(volatile uint32_t *)0xE000ED0C) // Application Interrupt and Reset Control location for Teensy
 
 /* Teensy pinout constants */
-#define PERCUSSION_STATION_NEO_BUTTONS 29
 #define PERCUSSION_STATION_NEO_STRIP 24
 #define PERCUSSION_STATION_BUTTON_0 23
 #define PERCUSSION_STATION_BUTTON_1 22

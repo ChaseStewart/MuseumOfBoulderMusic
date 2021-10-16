@@ -187,6 +187,5 @@ bool JoystickIsPressed()
                   yaw != prev_yaw
            );
   }
-  
   return false; // if joystick not available
 }

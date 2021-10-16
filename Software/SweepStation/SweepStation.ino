@@ -42,11 +42,11 @@ int left_prev_bend_val = 0;
 int right_curr_bend_val = 1;
 int right_prev_bend_val = 0;
 
-/* PIR */
+/* PIR variables */
 bool pir_state = LOW;
 bool prev_pir_state = HIGH;
 
-
+/* Presence detection variables */
 unsigned long ramp_start_millis;
 unsigned long last_activity;
 bool is_ramped_up = false;
@@ -124,14 +124,13 @@ void setup()
 
   NeoStickLeft.clear();
   NeoStickRight.clear();  
-
   NeoStickLeft.show();
   NeoStickRight.show();
   digitalWrite(TEENSY_LED_PIN, LOW);
 }
 
 /**
- * Just print all sensor outputs to serial to ensure proper functionality
+ * Process sensor inputs to generate proper MIDI messages and LED feedback
  */
 void loop() 
 {
@@ -150,7 +149,7 @@ void loop()
     left_range_in_cm = P_BEND_MAX_CM;
   }
 
-  /* convert ultrasonic range to value for MIDI CC and send it */
+  /* convert Right ultrasonic range to value for MIDI CC and send it */
   left_curr_bend_val = P_BEND_ONEBYTE_VALUE(left_range_in_cm);
   if ((left_curr_bend_val != left_prev_bend_val) && (abs(left_curr_bend_val - left_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA))
   {
@@ -158,7 +157,7 @@ void loop()
     updateNeoPixelStick(NeoStickLeft, left_curr_bend_val);
   }
 
-  /* Get Right Ultrasonic Distance sensor reading */
+  /* Get Left Ultrasonic Distance sensor reading */
   if (micros() >= right_ping_time)
   {
     /* NOTE: due to using newPing timer, this has to indirectly set range_in_us */
@@ -173,16 +172,16 @@ void loop()
     right_range_in_cm = P_BEND_MAX_CM;
   }
 
-  /* convert ultrasonic range to value for MIDI CC and send it */
+  /* convert Left ultrasonic range to value for MIDI CC and send it */
   right_curr_bend_val = P_BEND_ONEBYTE_VALUE(right_range_in_cm);
   if ((right_curr_bend_val != right_prev_bend_val) && (abs(right_curr_bend_val - right_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA))
   {
     usbMIDI.sendControlChange(in_config.pbend_right_cc, right_curr_bend_val, in_config.MIDI_Channel);
     updateNeoPixelStick(NeoStickRight, right_curr_bend_val);
   }
-
   left_prev_bend_val = left_curr_bend_val;
   right_prev_bend_val = right_curr_bend_val;
+
 
   /* Read buttons and update averaging arrays */
   ArcadeButton0.Update();
@@ -256,10 +255,8 @@ void loop()
   {
     rampDown(&ramp_is_active, &prev_increment, ramp_start_millis, &is_ramped_down, &is_ramped_up);  
   }
-
   prev_presence = current_presence;
   prev_pir_state = pir_state;
-
 
   /* Flush any queued messages */
   usbMIDI.send_now();
@@ -271,10 +268,13 @@ void loop()
   }
 }
 
+
 /**
  * Callback function to check whether ultrasonic sonar has returned data-
  * Provides a "spring constant" to the rangefinder reading, pushing it back to a detune of zero
  * when the user's hand is away from the rangefinder beam
+ * 
+ * NOTE: Identical to pingCheckRight- this is good enough for now
  */
 static void pingCheckLeft(void)
 {
@@ -285,6 +285,8 @@ static void pingCheckLeft(void)
  * Callback function to check whether ultrasonic sonar has returned data-
  * Provides a "spring constant" to the rangefinder reading, pushing it back to a detune of zero
  * when the user's hand is away from the rangefinder beam
+ * 
+ * NOTE: Identical to pingCheckLeft- this is good enough for now
  */
 static void pingCheckRight(void)
 {
@@ -301,7 +303,6 @@ static void initPins(void)
   pinMode(SWEEP_STATION_PIR_SENS, INPUT);
   pinMode(SWEEP_STATION_LED_0, OUTPUT);
   pinMode(SWEEP_STATION_LED_1, OUTPUT);
-
   pinMode(TEENSY_LED_PIN, OUTPUT);
   digitalWrite(TEENSY_LED_PIN, LOW);
 }

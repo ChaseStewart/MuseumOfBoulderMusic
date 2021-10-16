@@ -27,6 +27,7 @@ enum ArcadeButtonId
   BUTTON_LIMIT = 5
 };
 
+
 class ArcadeButton
 {
   public:
