@@ -1,5 +1,5 @@
 /******************************************************* 
- *  File: ConfigEEPROM.h
+ *  File: Nonvolatile.h
  *    
  *  Author: Chase E. Stewart
  *  For Hidden Layer Design
@@ -7,9 +7,12 @@
  *  License: Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)    
  *  
  *******************************************************/
-#ifndef __CONFIG_EEPROM_H__
-#define __CONFIG_EEPROM_H__
+#ifndef __NONVOLATILE_H__
+#define __NONVOLATILE_H__
 
+/**
+ * 
+ */
 enum stationType_t 
 {
   STATION_TYPE_PERCUSSION = 0,
@@ -27,5 +30,9 @@ enum stationType_t
 #define EEPROM_ADDR_MIDI_CHANNEL 0x12
 #define EEPROM_ADDR_MAX 0x7F // this is the limit for the TEENSY_LC
 
+/**
+ * Print out the state of the nonvolatile bytes
+ */
+void printNonvolConfig(void);
 
-#endif // __CONFIG_EEPROM_H__
+#endif //__NONVOLATILE_H__

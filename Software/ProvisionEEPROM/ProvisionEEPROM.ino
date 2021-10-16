@@ -6,6 +6,7 @@
  *  
  *  License: Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)    
  *  
+ *  Tested with Teensy 4.1
  *******************************************************/
 #include <EEPROM.h>
 
@@ -22,9 +23,9 @@
 /**
  * START EEPROM preferences to be written
  */
-const uint8_t THIS_STATION_ID = 0x2;
-const uint8_t THIS_MIDI_CHANNEL = 0x2;
-const stationType_t THIS_STATION_TYPE = STATION_TYPE_PERCUSSION;
+const uint8_t THIS_STATION_ID = 0x6;
+const uint8_t THIS_MIDI_CHANNEL = 0x6;
+const stationType_t THIS_STATION_TYPE = STATION_TYPE_SWEEP;
 /**
  * END EEPROM preferences to be written
  */
