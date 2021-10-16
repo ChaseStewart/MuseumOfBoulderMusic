@@ -115,11 +115,11 @@ void UpdateJoystick(config_t in_config)
     
     if (thumb_state != prev_thumb_state)
     {
-      usbMIDI.sendControlChange(in_config.thumb_cc, (thumb_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HIGH_VAL, in_config.MIDI_Channel);   
+      usbMIDI.sendControlChange(in_config.thumb_cc, (thumb_state) ? PREFS_BUTTON_CC_HIGH_VAL: PREFS_BUTTON_CC_LOW_VAL, in_config.MIDI_Channel);   
     }
     if (trigger_state != prev_trigger_state)
     {
-      usbMIDI.sendControlChange(in_config.trigger_cc, (trigger_state) ? PREFS_BUTTON_CC_LOW_VAL: PREFS_BUTTON_CC_HIGH_VAL, in_config.MIDI_Channel);   
+      usbMIDI.sendControlChange(in_config.trigger_cc, (trigger_state) ? PREFS_BUTTON_CC_HIGH_VAL: PREFS_BUTTON_CC_LOW_VAL, in_config.MIDI_Channel);   
     }
     if (roll != prev_roll && (roll < PREFS_JOYSTICK_DEADZONE_LOW || roll > PREFS_JOYSTICK_DEADZONE_HIGH))
     {
