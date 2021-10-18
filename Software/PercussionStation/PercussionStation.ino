@@ -33,6 +33,7 @@ config_t in_config = {0};
 unsigned long ping_time;
 unsigned long range_in_us;
 unsigned long range_in_cm;
+unsigned long ping_stop_time;
 int curr_bend_val = 1;
 int prev_bend_val = 0;
 
@@ -58,6 +59,8 @@ static void printBanner(void); // Print a serial welcome banner
 static void myControlChange(byte channel, byte control, byte value); // callback handler for reading a ControlChange from Max/MSP
 static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down);
 static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up);
+static void ClearCCs(config_t in_config);
+
 
 /* Global class instances */
 ArcadeButton ArcadeButton0(PERCUSSION_STATION_BUTTON_0, PERCUSSION_STATION_LED_0, BUTTON_0);                      
@@ -86,7 +89,8 @@ void setup()
 {
   /* Setup */
   initPins();
-  
+  digitalWrite(TEENSY_LED_PIN, HIGH);
+    
   /* We will read speciific MIDI CC messages to set the countdown light */
   usbMIDI.setHandleControlChange(myControlChange);
     
@@ -100,6 +104,8 @@ void setup()
   in_config.button3_cc   = MIDI_GEN_PURPOSE_4;
   in_config.button4_cc   = MIDI_GEN_PURPOSE_5;
   in_config.button5_cc   = MIDI_GEN_PURPOSE_6;
+  in_config.button6_cc   = MIDI_UNDEFINED_4;
+  in_config.button7_cc   = MIDI_UNDEFINED_5;
   in_config.pbend_cc     = MIDI_GEN_PURPOSE_7;
   in_config.roll_pos_cc  = MIDI_EFFECT_1_DEPTH;
   in_config.roll_neg_cc  = MIDI_EFFECT_2_DEPTH;
@@ -110,8 +116,6 @@ void setup()
   in_config.trigger_cc   = MIDI_UNDEFINED_1;
   in_config.thumb_cc     = MIDI_UNDEFINED_2;
   in_config.presence_cc  = MIDI_UNDEFINED_3;
-  in_config.button6_cc   = MIDI_UNDEFINED_4;
-  in_config.button7_cc   = MIDI_UNDEFINED_5;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
 
   ArcadeButton0.SetMIDIParams(in_config.MIDI_Channel, in_config.button0_cc);
@@ -127,12 +131,17 @@ void setup()
   Serial.begin(9600);
 #endif // DEBUG 
 
-  printBanner();
-  printNonvolConfig();
 
   NeoStick.clear();
   NeoStick.show();
-  digitalWrite(TEENSY_LED_PIN, LOW);
+
+  ClearCCs(in_config);
+  delay(5000);
+  printBanner();
+  printNonvolConfig();
+  usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
+  digitalWrite(TEENSY_LED_PIN, LOW); 
+  ping_time = 0;
 }
 
 /**
@@ -144,30 +153,19 @@ void loop()
   myusb.Task();
   PrintDeviceListChanges();
   UpdateJoystick(in_config);
-  
+
+  unsigned long loopMillis = millis(); 
   /* Get Ultrasonic Distance sensor reading */
-  if (micros() >= ping_time)
+  if (loopMillis >= ping_time)
   {
     /* NOTE: due to using newPing timer, this has to indirectly set range_in_us */
-    ultrasonic.ping_timer(pingCheck);
-    range_in_cm = range_in_us / US_ROUNDTRIP_CM;
+    pingCheck();
     ping_time += PREFS_ULTRA_PING_PERIOD;
   }
-
-
-  /* constrain range_in_cm, but sufficiently low values are treated as high ones */
-  if ((range_in_cm < P_BEND_MIN_CM) || (range_in_cm > P_BEND_MAX_CM))
-  {
-    range_in_cm = P_BEND_MAX_CM;
-  }
-
-  /* convert ultrasonic range to value for MIDI CC and send it */
-  curr_bend_val = P_BEND_ONEBYTE_VALUE(range_in_cm);
-  if ((curr_bend_val != prev_bend_val) && (abs(curr_bend_val- prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA))
-  {
-    usbMIDI.sendControlChange(in_config.pbend_cc, curr_bend_val, in_config.MIDI_Channel);
-  }
   prev_bend_val = curr_bend_val;
+
+  Serial.print("Bend=");
+  Serial.println(curr_bend_val);
 
   /* Read buttons and update averaging arrays */
   ArcadeButton0.Update();
@@ -274,7 +272,32 @@ void loop()
  */
 static void pingCheck(void)
 {
-  range_in_us = (ultrasonic.check_timer()) ? ultrasonic.ping_result : range_in_us +2;
+  range_in_us = ultrasonic.ping();
+  range_in_cm = range_in_us / US_ROUNDTRIP_CM;
+  
+
+  if (range_in_us == 0)
+  {
+    curr_bend_val = (curr_bend_val >= 2) ? curr_bend_val-2 : 0;
+  }
+  else
+  {
+    if (range_in_cm > 0 )
+    {
+      range_in_cm -= 1;
+    }
+    
+    /* convert ultrasonic range to value for MIDI CC and send it */
+    curr_bend_val = P_BEND_ONEBYTE_VALUE(range_in_cm);
+    curr_bend_val = constrain(curr_bend_val, 0, 127);
+  }
+
+  if(curr_bend_val != prev_bend_val && abs(curr_bend_val - prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
+  {
+    usbMIDI.sendControlChange(in_config.pbend_cc, curr_bend_val, in_config.MIDI_Channel);
+  }
+
+
 }
 
 
@@ -415,4 +438,26 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
     usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
+}
+
+static void ClearCCs(config_t in_config)
+{
+  usbMIDI.sendControlChange(in_config.button0_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.button1_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.button2_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.button3_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.button4_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.button5_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.button6_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.button7_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.pbend_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.trigger_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.thumb_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.roll_pos_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.roll_neg_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.pitch_pos_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.pitch_neg_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.yaw_pos_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.yaw_neg_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
 }
