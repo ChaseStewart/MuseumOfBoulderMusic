@@ -28,5 +28,6 @@ static void applyFrame(WS2812Serial NeoStick, neoStickFrame_t frame)
 void updateNeoPixelStick(WS2812Serial NeoStick, uint8_t value)
 {
   value  = constrain(value, 0, 127);
-  applyFrame(NeoStick, countdownArray[value / 8]); 
+  
+  applyFrame(NeoStick, countdownArray[(127 - value) / 8]); 
 }

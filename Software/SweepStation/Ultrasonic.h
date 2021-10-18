@@ -14,7 +14,6 @@
  * This file is now very barebones because the NewPing library is doing the heavy-lifting for the Ultrasonic firmware 
  */
 #define P_BEND_MAX_CM 30 // adjust this for sensitivity range of pitch bend
-#define P_BEND_MIN_CM 2 // adjust this for sensitivity range of pitch bend
 
 /**
  * MIDI Pitch bend message accepts a 14-bit twos compliment value, 

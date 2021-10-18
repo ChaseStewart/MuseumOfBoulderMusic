@@ -38,7 +38,7 @@
 
 /* Ultrasonic / pitch bend preferences */
 #define PREFS_ULTRA_MAX_CM 30
-#define PREFS_ULTRA_PING_PERIOD (unsigned long) (3)
+#define PREFS_ULTRA_PING_PERIOD (unsigned long) (30)
 #define PREFS_P_BEND_MAX_DELTA 1700
 #define PREFS_P_BEND_ONEBYTE_MAX_DELTA 10
 

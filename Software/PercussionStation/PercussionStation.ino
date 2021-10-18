@@ -158,14 +158,11 @@ void loop()
   /* Get Ultrasonic Distance sensor reading */
   if (loopMillis >= ping_time)
   {
-    /* NOTE: due to using newPing timer, this has to indirectly set range_in_us */
+    /* TODO: this is working best with a blocking call right now- boo! */
     pingCheck();
     ping_time += PREFS_ULTRA_PING_PERIOD;
   }
   prev_bend_val = curr_bend_val;
-
-  Serial.print("Bend=");
-  Serial.println(curr_bend_val);
 
   /* Read buttons and update averaging arrays */
   ArcadeButton0.Update();

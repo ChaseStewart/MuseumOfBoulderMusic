@@ -31,10 +31,9 @@ DMAMEM byte NeoStickRight_displayMemory[NeoStick_count*12]; // 12 bytes per LED
 config_t in_config = {0};
 
 /* Pitch bend variables */
-unsigned long left_ping_time;
+unsigned long ping_time;
 unsigned long left_range_in_us;
 unsigned long left_range_in_cm;
-unsigned long right_ping_time;
 unsigned long right_range_in_us;
 unsigned long right_range_in_cm;
 int left_curr_bend_val = 1;
@@ -57,13 +56,16 @@ bool ramp_is_active = false;
 bool current_presence = false;
 bool prev_presence = false;
 
+bool nextPingIsLeft = true; 
+
 /* Static Prototypes */
 static void initPins(void); // Just init the pins as input/output/input_pullup
-static void pingCheck(void); // Ultrasonic callback function
+static void pingCheck(bool nextPingIsLeft); // Ultrasonic callback function
 static void printBanner(void); // Print a serial welcome banner
 static void myControlChange(byte channel, byte control, byte value); // callback handler for reading a ControlChange from Max/MSP
-static void rampUp(bool *outBool, bool ramp_is_increasing, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down);
-static void rampDown(bool *outBool, bool ramp_is_increasing, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up);
+static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down);
+static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up);
+static void ClearCCs(config_t in_config);
 
 /* Global class instances */
 ArcadeButton ArcadeButton0(SWEEP_STATION_BUTTON_0, SWEEP_STATION_LED_0, BUTTON_0);                      
@@ -71,11 +73,11 @@ ArcadeButton ArcadeButton1(SWEEP_STATION_BUTTON_1, SWEEP_STATION_LED_1, BUTTON_1
 
 NewPing ultrasonicLeft( SWEEP_STATION_LEFT_ULTRA_TRIG, // Trigger pin
                    SWEEP_STATION_LEFT_ULTRA_SENS, // Sense pin
-                   PREFS_ULTRA_MAX_CM); // Max distance limit
+                   P_BEND_MAX_CM + 1); // Max distance limit
 
 NewPing ultrasonicRight(SWEEP_STATION_RIGHT_ULTRA_TRIG, // Trigger pin
                    SWEEP_STATION_RIGHT_ULTRA_SENS, // Sense pin
-                   PREFS_ULTRA_MAX_CM); // Max distance limit
+                   P_BEND_MAX_CM + 1); // Max distance limit
 
 WS2812Serial NeoStickLeft(NeoStick_count, 
                       NeoStickLeft_displayMemory, 
@@ -97,6 +99,7 @@ void setup()
 {
   /* Setup */
   initPins();
+  digitalWrite(TEENSY_LED_PIN, HIGH);
   
   /* We will read speciific MIDI CC messages to set the countdown light */
   usbMIDI.setHandleControlChange(myControlChange);
@@ -126,7 +129,11 @@ void setup()
   NeoStickRight.clear();  
   NeoStickLeft.show();
   NeoStickRight.show();
+  ClearCCs(in_config);
+  delay(5000);
+  usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
   digitalWrite(TEENSY_LED_PIN, LOW);
+  ping_time = millis();
 }
 
 /**
@@ -134,54 +141,17 @@ void setup()
  */
 void loop() 
 {
-  /* Get Right Ultrasonic Distance sensor reading */
-  if (micros() >= left_ping_time)
-  {
-    /* NOTE: due to using newPing timer, this has to indirectly set range_in_us */
-    ultrasonicLeft.ping_timer(pingCheckLeft);
-    left_range_in_cm = left_range_in_us / US_ROUNDTRIP_CM;
-    left_ping_time += PREFS_ULTRA_PING_PERIOD;
-  }
 
-  /* constrain range_in_cm, but sufficiently low values are treated as high ones */
-  if ((left_range_in_cm < P_BEND_MIN_CM) || (left_range_in_cm > P_BEND_MAX_CM))
-  {
-    left_range_in_cm = P_BEND_MAX_CM;
-  }
+  unsigned long loopMillis = millis(); 
 
-  /* convert Right ultrasonic range to value for MIDI CC and send it */
-  left_curr_bend_val = P_BEND_ONEBYTE_VALUE(left_range_in_cm);
-  if ((left_curr_bend_val != left_prev_bend_val) && (abs(left_curr_bend_val - left_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA))
+  if (loopMillis >= ping_time)
   {
-    usbMIDI.sendControlChange(in_config.pbend_left_cc, left_curr_bend_val, in_config.MIDI_Channel);
-    updateNeoPixelStick(NeoStickLeft, left_curr_bend_val);
-  }
-
-  /* Get Left Ultrasonic Distance sensor reading */
-  if (micros() >= right_ping_time)
-  {
-    /* NOTE: due to using newPing timer, this has to indirectly set range_in_us */
-    ultrasonicRight.ping_timer(pingCheckRight);
-    right_range_in_cm = right_range_in_us / US_ROUNDTRIP_CM;
-    right_ping_time += PREFS_ULTRA_PING_PERIOD;
-  }
-
-  /* constrain range_in_cm, but sufficiently low values are treated as high ones */
-  if ((right_range_in_cm < P_BEND_MIN_CM) || (right_range_in_cm > P_BEND_MAX_CM))
-  {
-    right_range_in_cm = P_BEND_MAX_CM;
-  }
-
-  /* convert Left ultrasonic range to value for MIDI CC and send it */
-  right_curr_bend_val = P_BEND_ONEBYTE_VALUE(right_range_in_cm);
-  if ((right_curr_bend_val != right_prev_bend_val) && (abs(right_curr_bend_val - right_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA))
-  {
-    usbMIDI.sendControlChange(in_config.pbend_right_cc, right_curr_bend_val, in_config.MIDI_Channel);
-    updateNeoPixelStick(NeoStickRight, right_curr_bend_val);
+    pingCheck(nextPingIsLeft);
+    ping_time += PREFS_ULTRA_PING_PERIOD;
+    nextPingIsLeft = !nextPingIsLeft;
   }
   left_prev_bend_val = left_curr_bend_val;
   right_prev_bend_val = right_curr_bend_val;
-
 
   /* Read buttons and update averaging arrays */
   ArcadeButton0.Update();
@@ -276,21 +246,62 @@ void loop()
  * 
  * NOTE: Identical to pingCheckRight- this is good enough for now
  */
-static void pingCheckLeft(void)
+static void pingCheck(bool nextPingIsLeft)
 {
-  left_range_in_us = (ultrasonicLeft.check_timer()) ? ultrasonicLeft.ping_result : left_range_in_us +2;
-}
-
-/**
- * Callback function to check whether ultrasonic sonar has returned data-
- * Provides a "spring constant" to the rangefinder reading, pushing it back to a detune of zero
- * when the user's hand is away from the rangefinder beam
- * 
- * NOTE: Identical to pingCheckLeft- this is good enough for now
- */
-static void pingCheckRight(void)
-{
-  right_range_in_us = (ultrasonicRight.check_timer()) ? ultrasonicRight.ping_result : right_range_in_us +2;
+  if (nextPingIsLeft)
+  {
+    left_range_in_us = ultrasonicLeft.ping();
+    left_range_in_cm = left_range_in_us / US_ROUNDTRIP_CM;
+    
+    if (left_range_in_us == 0)
+    {
+      left_curr_bend_val = (left_curr_bend_val >= 5) ? left_curr_bend_val-5 : 0;
+    }
+    else
+    {
+      if (left_range_in_cm > 0 )
+      {
+        left_range_in_cm -= 1;
+      }
+      
+      /* convert ultrasonic range to value for MIDI CC and send it */
+      left_curr_bend_val = P_BEND_ONEBYTE_VALUE(left_range_in_cm);
+      left_curr_bend_val = constrain(left_curr_bend_val, 0, 127);
+    }
+  
+    if(left_curr_bend_val != left_prev_bend_val && abs(left_curr_bend_val - left_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
+    {
+      usbMIDI.sendControlChange(in_config.pbend_left_cc, left_curr_bend_val, in_config.MIDI_Channel);
+      updateNeoPixelStick(NeoStickLeft, left_curr_bend_val);
+    }    
+  }
+  else
+  {
+    right_range_in_us = ultrasonicRight.ping();
+    right_range_in_cm = right_range_in_us / US_ROUNDTRIP_CM;
+    
+    if (right_range_in_us == 0)
+    {
+      right_curr_bend_val = (right_curr_bend_val >= 5) ? right_curr_bend_val-5 : 0;
+    }
+    else
+    {
+      if (right_range_in_cm > 0 )
+      {
+        right_range_in_cm -= 1;
+      }
+      
+      /* convert ultrasonic range to value for MIDI CC and send it */
+      right_curr_bend_val = P_BEND_ONEBYTE_VALUE(right_range_in_cm);
+      right_curr_bend_val = constrain(right_curr_bend_val, 0, 127);
+    }
+  
+    if(right_curr_bend_val != right_prev_bend_val && abs(right_curr_bend_val - right_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
+    {
+      usbMIDI.sendControlChange(in_config.pbend_right_cc, right_curr_bend_val, in_config.MIDI_Channel);
+      updateNeoPixelStick(NeoStickRight, right_curr_bend_val);
+    }
+  }
 }
 
 /**
@@ -401,4 +412,13 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
     usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
+}
+
+static void ClearCCs(config_t in_config)
+{
+  usbMIDI.sendControlChange(in_config.button0_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.button1_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.pbend_left_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.pbend_right_cc, 0, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
 }

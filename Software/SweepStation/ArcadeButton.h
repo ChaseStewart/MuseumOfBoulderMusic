@@ -14,7 +14,7 @@
 #include "Nonvolatile.h"
 
 /* Definitions */
-#define BUTTON_AVERAGING_ARRAY_LEN 10 // averaging array
+#define BUTTON_AVERAGING_ARRAY_LEN 100 // averaging array
 
 enum ArcadeButtonId 
 {
