@@ -66,6 +66,8 @@ ArcadeButton ArcadeButton2(PERCUSSION_STATION_BUTTON_2, PERCUSSION_STATION_LED_2
 ArcadeButton ArcadeButton3(PERCUSSION_STATION_BUTTON_3, PERCUSSION_STATION_LED_3, BUTTON_3);
 ArcadeButton ArcadeButton4(PERCUSSION_STATION_BUTTON_4, PERCUSSION_STATION_LED_4, BUTTON_4);
 ArcadeButton ArcadeButton5(PERCUSSION_STATION_BUTTON_5, PERCUSSION_STATION_LED_5, BUTTON_5); 
+ArcadeButton ArcadeButton6(PERCUSSION_STATION_BUTTON_6, PERCUSSION_STATION_LED_6, BUTTON_6); 
+ArcadeButton ArcadeButton7(PERCUSSION_STATION_BUTTON_7, PERCUSSION_STATION_LED_7, BUTTON_7); 
 
 NewPing ultrasonic(PERCUSSION_STATION_ULTRA_TRIG, // Trigger pin
                    PERCUSSION_STATION_ULTRA_SENS, // Sense pin
@@ -108,6 +110,8 @@ void setup()
   in_config.trigger_cc   = MIDI_UNDEFINED_1;
   in_config.thumb_cc     = MIDI_UNDEFINED_2;
   in_config.presence_cc  = MIDI_UNDEFINED_3;
+  in_config.button6_cc   = MIDI_UNDEFINED_4;
+  in_config.button7_cc   = MIDI_UNDEFINED_5;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
 
   ArcadeButton0.SetMIDIParams(in_config.MIDI_Channel, in_config.button0_cc);
@@ -116,6 +120,8 @@ void setup()
   ArcadeButton3.SetMIDIParams(in_config.MIDI_Channel, in_config.button3_cc);
   ArcadeButton4.SetMIDIParams(in_config.MIDI_Channel, in_config.button4_cc);
   ArcadeButton5.SetMIDIParams(in_config.MIDI_Channel, in_config.button5_cc);
+  ArcadeButton6.SetMIDIParams(in_config.MIDI_Channel, in_config.button6_cc);
+  ArcadeButton7.SetMIDIParams(in_config.MIDI_Channel, in_config.button7_cc);
   
 #ifdef DEBUG
   Serial.begin(9600);
@@ -170,6 +176,8 @@ void loop()
   ArcadeButton3.Update();
   ArcadeButton4.Update();
   ArcadeButton5.Update();
+  ArcadeButton6.Update();
+  ArcadeButton7.Update();
       
   /* Handle PIR sensor */
   pir_state = digitalRead(PERCUSSION_STATION_PIR_SENS);
@@ -187,6 +195,8 @@ void loop()
                       !ArcadeButton3.GetReading() |
                       !ArcadeButton4.GetReading() |
                       !ArcadeButton5.GetReading() |
+                      !ArcadeButton6.GetReading() |
+                      !ArcadeButton7.GetReading() |
                       JoystickIsPressed() |
                       ultrasonic.check_timer()
                       );
@@ -279,6 +289,8 @@ static void initPins(void)
   pinMode(PERCUSSION_STATION_BUTTON_3, INPUT_PULLUP);
   pinMode(PERCUSSION_STATION_BUTTON_4, INPUT_PULLUP);
   pinMode(PERCUSSION_STATION_BUTTON_5, INPUT_PULLUP);
+  pinMode(PERCUSSION_STATION_BUTTON_6, INPUT_PULLUP);
+  pinMode(PERCUSSION_STATION_BUTTON_7, INPUT_PULLUP);
   pinMode(PERCUSSION_STATION_PIR_SENS, INPUT);
   pinMode(PERCUSSION_STATION_LED_0, OUTPUT);
   pinMode(PERCUSSION_STATION_LED_1, OUTPUT);
@@ -286,6 +298,8 @@ static void initPins(void)
   pinMode(PERCUSSION_STATION_LED_3, OUTPUT);
   pinMode(PERCUSSION_STATION_LED_4, OUTPUT);
   pinMode(PERCUSSION_STATION_LED_5, OUTPUT);
+  pinMode(PERCUSSION_STATION_LED_6, OUTPUT);
+  pinMode(PERCUSSION_STATION_LED_7, OUTPUT);
   pinMode(TEENSY_LED_PIN, OUTPUT);
   digitalWrite(TEENSY_LED_PIN, LOW);
 }
@@ -362,6 +376,8 @@ static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_mi
     ArcadeButton3.SetLowValue(5*increment);
     ArcadeButton4.SetLowValue(5*increment);
     ArcadeButton5.SetLowValue(5*increment);
+    ArcadeButton6.SetLowValue(5*increment);
+    ArcadeButton7.SetLowValue(5*increment);
     usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
@@ -394,6 +410,8 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
     ArcadeButton3.SetLowValue(50 - 5*increment);
     ArcadeButton4.SetLowValue(50 - 5*increment);
     ArcadeButton5.SetLowValue(50 - 5*increment);
+    ArcadeButton6.SetLowValue(50 - 5*increment);
+    ArcadeButton7.SetLowValue(50 - 5*increment);
     usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }

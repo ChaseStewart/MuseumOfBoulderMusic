@@ -24,7 +24,9 @@ enum ArcadeButtonId
   BUTTON_3 = 3,
   BUTTON_4 = 4,
   BUTTON_5 = 5,
-  BUTTON_LIMIT = 5
+  BUTTON_6 = 6,
+  BUTTON_7 = 7,
+  BUTTON_LIMIT = 7
 };
 
 

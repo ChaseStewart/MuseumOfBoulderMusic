@@ -78,6 +78,8 @@ typedef struct
   uint8_t button3_cc;
   uint8_t button4_cc;
   uint8_t button5_cc;
+  uint8_t button6_cc;
+  uint8_t button7_cc;
   uint8_t roll_pos_cc;
   uint8_t roll_neg_cc;
   uint8_t pitch_pos_cc;
