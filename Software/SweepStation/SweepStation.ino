@@ -73,11 +73,11 @@ ArcadeButton ArcadeButton1(SWEEP_STATION_BUTTON_1, SWEEP_STATION_LED_1, BUTTON_1
 
 NewPing ultrasonicLeft( SWEEP_STATION_LEFT_ULTRA_TRIG, // Trigger pin
                    SWEEP_STATION_LEFT_ULTRA_SENS, // Sense pin
-                   P_BEND_MAX_CM + 1); // Max distance limit
+                   PREFS_ULTRA_MAX_CM + 1); // Max distance limit
 
 NewPing ultrasonicRight(SWEEP_STATION_RIGHT_ULTRA_TRIG, // Trigger pin
                    SWEEP_STATION_RIGHT_ULTRA_SENS, // Sense pin
-                   P_BEND_MAX_CM + 1); // Max distance limit
+                   PREFS_ULTRA_MAX_CM + 1); // Max distance limit
 
 WS2812Serial NeoStickLeft(NeoStick_count, 
                       NeoStickLeft_displayMemory, 
@@ -255,7 +255,7 @@ static void pingCheck(bool nextPingIsLeft)
     
     if (left_range_in_us == 0)
     {
-      left_curr_bend_val = (left_curr_bend_val >= 5) ? left_curr_bend_val-5 : 0;
+      left_curr_bend_val = (left_curr_bend_val >= PREFS_ULTRA_SPRINGBACK_VAL) ? left_curr_bend_val - PREFS_ULTRA_SPRINGBACK_VAL : 0;
     }
     else
     {
@@ -265,11 +265,11 @@ static void pingCheck(bool nextPingIsLeft)
       }
       
       /* convert ultrasonic range to value for MIDI CC and send it */
-      left_curr_bend_val = P_BEND_ONEBYTE_VALUE(left_range_in_cm);
+      left_curr_bend_val = ULTRA_ONEBYTE_VALUE(left_range_in_cm);
       left_curr_bend_val = constrain(left_curr_bend_val, 0, 127);
     }
   
-    if(left_curr_bend_val != left_prev_bend_val && abs(left_curr_bend_val - left_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
+    if(left_curr_bend_val != left_prev_bend_val && abs(left_curr_bend_val - left_prev_bend_val) < PREFS_ULTRA_ONEBYTE_MAX_DELTA)
     {
       usbMIDI.sendControlChange(in_config.pbend_left_cc, left_curr_bend_val, in_config.MIDI_Channel);
       updateNeoPixelStick(NeoStickLeft, left_curr_bend_val);
@@ -282,7 +282,7 @@ static void pingCheck(bool nextPingIsLeft)
     
     if (right_range_in_us == 0)
     {
-      right_curr_bend_val = (right_curr_bend_val >= 5) ? right_curr_bend_val-5 : 0;
+      right_curr_bend_val = (right_curr_bend_val >= PREFS_ULTRA_SPRINGBACK_VAL) ? right_curr_bend_val - PREFS_ULTRA_SPRINGBACK_VAL : 0;
     }
     else
     {
@@ -292,11 +292,11 @@ static void pingCheck(bool nextPingIsLeft)
       }
       
       /* convert ultrasonic range to value for MIDI CC and send it */
-      right_curr_bend_val = P_BEND_ONEBYTE_VALUE(right_range_in_cm);
+      right_curr_bend_val = ULTRA_ONEBYTE_VALUE(right_range_in_cm);
       right_curr_bend_val = constrain(right_curr_bend_val, 0, 127);
     }
   
-    if(right_curr_bend_val != right_prev_bend_val && abs(right_curr_bend_val - right_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
+    if(right_curr_bend_val != right_prev_bend_val && abs(right_curr_bend_val - right_prev_bend_val) < PREFS_ULTRA_ONEBYTE_MAX_DELTA)
     {
       usbMIDI.sendControlChange(in_config.pbend_right_cc, right_curr_bend_val, in_config.MIDI_Channel);
       updateNeoPixelStick(NeoStickRight, right_curr_bend_val);
