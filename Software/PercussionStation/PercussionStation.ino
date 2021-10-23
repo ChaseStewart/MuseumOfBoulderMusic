@@ -292,9 +292,8 @@ static void pingCheck(void)
   if(curr_bend_val != prev_bend_val && abs(curr_bend_val - prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
   {
     usbMIDI.sendControlChange(in_config.pbend_cc, curr_bend_val, in_config.MIDI_Channel);
+    updateNeoPixelStick(NeoStick, curr_bend_val);
   }
-
-
 }
 
 
@@ -363,11 +362,15 @@ void printBanner(void)
  */
 static void myControlChange(byte channel, byte control, byte value)
 {
-  if ((channel != PREFS_MIDI_INPUT_CHANNEL) || (control != PREFS_MIDI_INPUT_CC))
-  {
-    return;
-  }
-  updateNeoPixelStick(NeoStick, value);
+
+  /**
+   * TODO FIXME currently unused
+   */
+  //  if ((channel != PREFS_MIDI_INPUT_CHANNEL) || (control != PREFS_MIDI_INPUT_CC))
+  //  {
+  //    return;
+  //  }
+  //  updateNeoPixelStick(NeoStick, value);
 }
 
 /**
