@@ -303,7 +303,7 @@ static void pingCheck(void)
 
   if (range_in_us == 0)
   {
-    curr_bend_val = (curr_bend_val >= 2) ? curr_bend_val-2 : 0;
+    curr_bend_val = (curr_bend_val >= PREFS_ULTRA_SPRINGBACK_VAL) ? curr_bend_val - PREFS_ULTRA_SPRINGBACK_VAL : 0;
   }
   else
   {
@@ -313,11 +313,11 @@ static void pingCheck(void)
     }
     
     /* convert ultrasonic range to value for MIDI CC and send it */
-    curr_bend_val = P_BEND_ONEBYTE_VALUE(range_in_cm);
+    curr_bend_val = ULTRA_ONEBYTE_VALUE(range_in_cm);
     curr_bend_val = constrain(curr_bend_val, 0, 127);
   }
 
-  if(curr_bend_val != prev_bend_val && abs(curr_bend_val - prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
+  if(curr_bend_val != prev_bend_val && abs(curr_bend_val - prev_bend_val) < PREFS_ULTRA_ONEBYTE_MAX_DELTA)
   {
     usbMIDI.sendControlChange(in_config.pbend_cc, curr_bend_val, in_config.MIDI_Channel);
     updateNeoPixelStick(NeoStick, curr_bend_val, in_config.HW_Type);
