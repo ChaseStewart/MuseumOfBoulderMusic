@@ -114,6 +114,7 @@ void setup()
   in_config.pbend_right_cc = MIDI_GEN_PURPOSE_4;
   in_config.presence_cc    = MIDI_GEN_PURPOSE_5;
   in_config.MIDI_Channel   = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
+  in_config.HW_Type        = (stationType_t) EEPROM.read(EEPROM_ADDR_STATION_TYPE);
 
   ArcadeButton0.SetMIDIParams(in_config.MIDI_Channel, in_config.button0_cc);
   ArcadeButton1.SetMIDIParams(in_config.MIDI_Channel, in_config.button1_cc);
@@ -272,7 +273,7 @@ static void pingCheck(bool nextPingIsLeft)
     if(left_curr_bend_val != left_prev_bend_val && abs(left_curr_bend_val - left_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
     {
       usbMIDI.sendControlChange(in_config.pbend_left_cc, left_curr_bend_val, in_config.MIDI_Channel);
-      updateNeoPixelStick(NeoStickLeft, left_curr_bend_val);
+      updateNeoPixelStick(NeoStickLeft, left_curr_bend_val, in_config.HW_Type);
     }    
   }
   else
@@ -299,7 +300,7 @@ static void pingCheck(bool nextPingIsLeft)
     if(right_curr_bend_val != right_prev_bend_val && abs(right_curr_bend_val - right_prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
     {
       usbMIDI.sendControlChange(in_config.pbend_right_cc, right_curr_bend_val, in_config.MIDI_Channel);
-      updateNeoPixelStick(NeoStickRight, right_curr_bend_val);
+      updateNeoPixelStick(NeoStickRight, right_curr_bend_val, in_config.HW_Type);
     }
   }
 }
