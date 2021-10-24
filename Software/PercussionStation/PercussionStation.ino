@@ -228,10 +228,7 @@ void loop()
   if (current_presence)
   {
       last_activity = millis();
-  }
-  
-  /* Debug for PIR state- we can turn this off if it becomes distracting */
-  digitalWrite(TEENSY_LED_PIN, pir_state);  
+  } 
 
   /**
    * Start rampUp() if we meet the following criteria: 
@@ -278,6 +275,7 @@ void loop()
   }
   prev_presence = current_presence;
   prev_pir_state = pir_state;
+  digitalWrite(TEENSY_LED_PIN, pir_state);
 
   /* Flush any queued messages */
   usbMIDI.send_now();

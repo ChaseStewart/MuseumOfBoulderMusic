@@ -252,6 +252,7 @@ void loop()
   }
   prev_presence = current_presence;
   prev_pir_state = pir_state;
+  digitalWrite(TEENSY_LED_PIN, pir_state);
 
   /* Flush any queued messages */
   usbMIDI.send_now();
