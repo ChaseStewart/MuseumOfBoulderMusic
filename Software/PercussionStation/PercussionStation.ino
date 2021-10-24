@@ -152,7 +152,7 @@ void setup()
   NeoStick.show();
 
   ClearCCs(in_config);
-  delay(5000);
+  delay(10000);
   printBanner();
   printNonvolConfig();
   usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
@@ -421,14 +421,14 @@ static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_mi
   uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
   if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
   {
-    ArcadeButton0.SetLowValue(5*increment);
-    ArcadeButton1.SetLowValue(5*increment);
-    ArcadeButton2.SetLowValue(5*increment);
-    ArcadeButton3.SetLowValue(5*increment);
-    ArcadeButton4.SetLowValue(5*increment);
-    ArcadeButton5.SetLowValue(5*increment);
-    ArcadeButton6.SetLowValue(5*increment);
-    ArcadeButton7.SetLowValue(5*increment);
+    ArcadeButton0.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton1.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton2.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton3.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton4.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton5.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton6.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton7.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
     usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
@@ -455,14 +455,14 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
   uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
   if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
   {
-    ArcadeButton0.SetLowValue(50 - 5*increment);
-    ArcadeButton1.SetLowValue(50 - 5*increment);
-    ArcadeButton2.SetLowValue(50 - 5*increment);
-    ArcadeButton3.SetLowValue(50 - 5*increment);
-    ArcadeButton4.SetLowValue(50 - 5*increment);
-    ArcadeButton5.SetLowValue(50 - 5*increment);
-    ArcadeButton6.SetLowValue(50 - 5*increment);
-    ArcadeButton7.SetLowValue(50 - 5*increment);
+    ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton2.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton3.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton4.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton5.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton6.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton7.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
     usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
