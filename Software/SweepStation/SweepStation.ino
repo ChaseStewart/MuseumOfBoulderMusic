@@ -102,8 +102,8 @@ WS2812Serial NeoStickRight(NeoStick_count,
  */
 //const unsigned long reboot_time = REBOOT_MIN_IN_MSEC;
 //const unsigned long reboot_time = REBOOT_DAY_IN_MSEC;
-const unsigned long reboot_time = REBOOT_WEEK_IN_MSEC;
-//const unsigned long reboot_time = REBOOT_NEVER;
+//const unsigned long reboot_time = REBOOT_WEEK_IN_MSEC;
+const unsigned long reboot_time = REBOOT_NEVER;
 
 /**
  * Setup pinouts and serial 
@@ -143,7 +143,7 @@ void setup()
   NeoStickLeft.show();
   NeoStickRight.show();
   ClearCCs(in_config);
-  delay(5000);
+  delay(10000);
   usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
   digitalWrite(TEENSY_LED_PIN, LOW);
   ping_time = millis();
