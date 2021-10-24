@@ -132,6 +132,7 @@ void setup()
   in_config.thumb_cc     = MIDI_UNDEFINED_2;
   in_config.presence_cc  = MIDI_UNDEFINED_3;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
+  in_config.HW_Type = (stationType_t) EEPROM.read(EEPROM_ADDR_STATION_TYPE);
 
   ArcadeButton0.SetMIDIParams(in_config.MIDI_Channel, in_config.button0_cc);
   ArcadeButton1.SetMIDIParams(in_config.MIDI_Channel, in_config.button1_cc);
@@ -151,7 +152,7 @@ void setup()
   NeoStick.show();
 
   ClearCCs(in_config);
-  delay(5000);
+  delay(10000);
   printBanner();
   printNonvolConfig();
   usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
@@ -227,10 +228,7 @@ void loop()
   if (current_presence)
   {
       last_activity = millis();
-  }
-  
-  /* Debug for PIR state- we can turn this off if it becomes distracting */
-  digitalWrite(TEENSY_LED_PIN, pir_state);  
+  } 
 
   /**
    * Start rampUp() if we meet the following criteria: 
@@ -277,6 +275,7 @@ void loop()
   }
   prev_presence = current_presence;
   prev_pir_state = pir_state;
+  digitalWrite(TEENSY_LED_PIN, pir_state);
 
   /* Flush any queued messages */
   usbMIDI.send_now();
@@ -302,7 +301,7 @@ static void pingCheck(void)
 
   if (range_in_us == 0)
   {
-    curr_bend_val = (curr_bend_val >= 2) ? curr_bend_val-2 : 0;
+    curr_bend_val = (curr_bend_val >= PREFS_ULTRA_SPRINGBACK_VAL) ? curr_bend_val - PREFS_ULTRA_SPRINGBACK_VAL : 0;
   }
   else
   {
@@ -312,16 +311,15 @@ static void pingCheck(void)
     }
     
     /* convert ultrasonic range to value for MIDI CC and send it */
-    curr_bend_val = P_BEND_ONEBYTE_VALUE(range_in_cm);
+    curr_bend_val = ULTRA_ONEBYTE_VALUE(range_in_cm);
     curr_bend_val = constrain(curr_bend_val, 0, 127);
   }
 
-  if(curr_bend_val != prev_bend_val && abs(curr_bend_val - prev_bend_val) < PREFS_P_BEND_ONEBYTE_MAX_DELTA)
+  if(curr_bend_val != prev_bend_val && abs(curr_bend_val - prev_bend_val) < PREFS_ULTRA_ONEBYTE_MAX_DELTA)
   {
     usbMIDI.sendControlChange(in_config.pbend_cc, curr_bend_val, in_config.MIDI_Channel);
+    updateNeoPixelStick(NeoStick, curr_bend_val, in_config.HW_Type);
   }
-
-
 }
 
 
@@ -390,11 +388,15 @@ void printBanner(void)
  */
 static void myControlChange(byte channel, byte control, byte value)
 {
-  if ((channel != PREFS_MIDI_INPUT_CHANNEL) || (control != PREFS_MIDI_INPUT_CC))
-  {
-    return;
-  }
-  updateNeoPixelStick(NeoStick, value);
+
+  /**
+   * TODO FIXME currently unused
+   */
+  //  if ((channel != PREFS_MIDI_INPUT_CHANNEL) || (control != PREFS_MIDI_INPUT_CC))
+  //  {
+  //    return;
+  //  }
+  //  updateNeoPixelStick(NeoStick, value);
 }
 
 /**
@@ -417,14 +419,14 @@ static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_mi
   uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
   if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
   {
-    ArcadeButton0.SetLowValue(5*increment);
-    ArcadeButton1.SetLowValue(5*increment);
-    ArcadeButton2.SetLowValue(5*increment);
-    ArcadeButton3.SetLowValue(5*increment);
-    ArcadeButton4.SetLowValue(5*increment);
-    ArcadeButton5.SetLowValue(5*increment);
-    ArcadeButton6.SetLowValue(5*increment);
-    ArcadeButton7.SetLowValue(5*increment);
+    ArcadeButton0.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton1.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton2.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton3.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton4.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton5.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton6.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton7.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
     usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
@@ -451,14 +453,14 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
   uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
   if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
   {
-    ArcadeButton0.SetLowValue(50 - 5*increment);
-    ArcadeButton1.SetLowValue(50 - 5*increment);
-    ArcadeButton2.SetLowValue(50 - 5*increment);
-    ArcadeButton3.SetLowValue(50 - 5*increment);
-    ArcadeButton4.SetLowValue(50 - 5*increment);
-    ArcadeButton5.SetLowValue(50 - 5*increment);
-    ArcadeButton6.SetLowValue(50 - 5*increment);
-    ArcadeButton7.SetLowValue(50 - 5*increment);
+    ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton2.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton3.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton4.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton5.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton6.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton7.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
     usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }

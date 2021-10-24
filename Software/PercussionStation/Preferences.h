@@ -12,6 +12,7 @@
 
 #include "Arduino.h"
 #include "MIDIConstants.h"
+#include "Nonvolatile.h" // for stationType_t
 
 /* Constants for automatic reboot */
 const unsigned int REBOOT_MIN_IN_MSEC  = 60000;
@@ -44,18 +45,19 @@ const unsigned int REBOOT_NEVER        = 0;
 
 
 /* Ultrasonic / pitch bend preferences */
-#define PREFS_ULTRA_MAX_CM 30
+#define PREFS_ULTRA_MAX_CM 30 // change this to change the far range of what the ultrasonic can "see" - in centimeters
 #define PREFS_ULTRA_PING_PERIOD (unsigned long) (33)
-#define PREFS_P_BEND_MAX_DELTA 1700
-#define PREFS_P_BEND_ONEBYTE_MAX_DELTA 8
+#define PREFS_ULTRA_MAX_DELTA 1700
+#define PREFS_ULTRA_ONEBYTE_MAX_DELTA 8
+#define PREFS_ULTRA_SPRINGBACK_VAL 5 // amount of "spring constant" for when ultrasonic is not being controlled by a user. Units are 0-127 CC value
 
 /* Button preferences */
 #define PREFS_BUTTON_DEBOUNCE_MSEC 10
 #define PREFS_BUTTON_CC_LOW_VAL 0 // what CC corresponds to button OFF
 #define PREFS_BUTTON_CC_HIGH_VAL 127 // what CC val corresponds to button ON
-#define PREFS_ARCADE_BUTTON_PWM_HIGH 200
-#define PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE 0
-#define PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE 30
+#define PREFS_ARCADE_BUTTON_PWM_HIGH 255 // Button brightness from 0-255 that determines how lit up the arcade buttons are when pressed
+#define PREFS_ARCADE_BUTTON_PWM_LOW_ABSENCE 0 // Button brightness when completely off/ presence is not detected
+#define PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE 10 // Button brightnes when presence is detected but the button is not currently being pressed Top of ramp value
 
 /* Joystick preferences */
 #define PREFS_JOYSTICK_DEBOUNCE_MSEC 300
@@ -66,8 +68,8 @@ const unsigned int REBOOT_NEVER        = 0;
 #define PREFS_LIN_POT_MIN_READING 10
 
 /* MIDI preferences */
-#define PREFS_MIDI_INPUT_CHANNEL   MIDI_CHANNEL_15
-#define PREFS_MIDI_INPUT_CC        MIDI_GEN_PURPOSE_8   
+#define PREFS_MIDI_INPUT_CHANNEL   MIDI_CHANNEL_15    // currently unused
+#define PREFS_MIDI_INPUT_CC        MIDI_GEN_PURPOSE_8 // currently unused  
 
 #define PREFS_RAMP_PERIOD 500
 #define PREFS_RAMP_INCREMENTS 10
@@ -97,6 +99,7 @@ typedef struct
   uint8_t pbend_cc;
   uint8_t presence_cc;
   uint8_t MIDI_Channel;
+  stationType_t HW_Type;
 } config_t;
 
 #endif //__PREFERENCES_H__

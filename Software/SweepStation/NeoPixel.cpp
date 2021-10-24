@@ -8,11 +8,8 @@
  *
  *******************************************************/
 #include "NeoPixel.h"
+#include "Nonvolatile.h" // for stationType_t
 
-
-/**
- * Just a helper function to apply a frame to an array of NeoPixels
- */
 static void applyFrame(WS2812Serial NeoStick, neoStickFrame_t frame)
 {
   for (int i = 0; i < NeoStick_count; i++)
@@ -22,12 +19,27 @@ static void applyFrame(WS2812Serial NeoStick, neoStickFrame_t frame)
   NeoStick.show();
 }
 
-/**
- * Take a value as an index into the static LED array
- */
-void updateNeoPixelStick(WS2812Serial NeoStick, uint8_t value)
+
+void updateNeoPixelStick(WS2812Serial NeoStick, uint8_t value, stationType_t hwType)
 {
   value  = constrain(value, 0, 127);
-  
-  applyFrame(NeoStick, countdownArray[(127 - value) / 8]); 
+  switch(hwType)
+  {
+    case STATION_TYPE_PERCUSSION:
+      // NeoStick.setPixel has a prototype like setPixel(uint16_t index, uint8_t red, uint8_t green, uint8_t blue)
+      applyFrame(NeoStick, blueArray[value / 8]); 
+      break;
+      
+    case STATION_TYPE_MELODIC:
+      applyFrame(NeoStick, yellowArray[value / 8]); 
+      break;
+      
+    case   STATION_TYPE_SWEEP:
+      applyFrame(NeoStick, whiteArray[value / 8]); 
+      break;
+
+    default :
+      // should never get here
+      break;     
+  }  
 }
