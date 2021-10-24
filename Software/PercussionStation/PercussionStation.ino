@@ -60,6 +60,7 @@ static void myControlChange(byte channel, byte control, byte value); // callback
 static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_up, bool *is_ramped_down);
 static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_millis, bool *is_ramped_down, bool *is_ramped_up);
 static void ClearCCs(config_t in_config);
+static void softRestart(void); // just restart the teensy
 
 
 /* Global class instances */
@@ -81,6 +82,20 @@ WS2812Serial NeoStick(NeoStick_count,
                       NeoStick_drawingMemory, 
                       PERCUSSION_STATION_NEO_STRIP, 
                       WS2812_GRB);
+
+/**
+ * Uncomment one of these to set the duration for the Teensy to automatically reboot
+ * only 1 of these can be selected or else you will get a compilation error.
+ * 
+ * NOTE: CRITICAL NOTE HERE- the teensy DOES NOT sync to NTP server or anything for time of day, 
+ * This will simply be a day/week/whenever from when you booted it up. To 
+ */
+//const unsigned long reboot_time = REBOOT_MIN_IN_MSEC;
+//const unsigned long reboot_time = REBOOT_DAY_IN_MSEC;
+const unsigned long reboot_time = REBOOT_WEEK_IN_MSEC;
+//const unsigned long reboot_time = REBOOT_NEVER;
+   
+
 
 /**
  * Setup pinouts and serial 
@@ -150,6 +165,18 @@ void setup()
  */
 void loop() 
 {
+  /**
+   * Reboot this teensy after the alloted amt of time
+   * If reboot_time is set to REBOOT_NEVER, then never reboot the teensy
+   * NOTE: Please only select one of these!
+   */
+   if ((millis() > reboot_time) && (REBOOT_NEVER != reboot_time))
+   {
+      Serial.printf("NOTE: Reboot time reached; Going for reboot in 3 seconds...\r\n");
+      delay(3000);
+      softRestart();
+   }
+  
   /* get updates from usbHost */
   myusb.Task();
   PrintDeviceListChanges();
@@ -461,4 +488,13 @@ static void ClearCCs(config_t in_config)
   usbMIDI.sendControlChange(in_config.yaw_pos_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.yaw_neg_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
+}
+
+/**
+ * Reset the Teensy in software
+ */
+static void softRestart() 
+{
+  Serial.end();  //clears the serial monitor  if used
+  SCB_AIRCR = 0x05FA0004;  //write value for restart
 }

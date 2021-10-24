@@ -14,6 +14,13 @@
 #include "MIDIConstants.h"
 #include "Nonvolatile.h" // for stationType_t
 
+/* Constants for automatic reboot */
+const unsigned int REBOOT_MIN_IN_MSEC  = 60000;
+const unsigned int REBOOT_DAY_IN_MSEC  = 86400000;
+const unsigned int REBOOT_WEEK_IN_MSEC = 604800000;
+const unsigned int REBOOT_NEVER        = 0;
+
+
 #define DEBUG
 
 /**
