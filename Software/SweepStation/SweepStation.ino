@@ -405,8 +405,8 @@ static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_mi
   uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
   if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
   {
-    ArcadeButton0.SetLowValue(5*increment);
-    ArcadeButton1.SetLowValue(5*increment);
+    ArcadeButton0.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
+    ArcadeButton1.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
     usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
@@ -432,8 +432,8 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
   uint8_t increment = (PREFS_RAMP_PERIOD - ((start_millis + PREFS_RAMP_PERIOD) - currentMillis)) / (PREFS_RAMP_PERIOD / PREFS_RAMP_INCREMENTS);
   if (increment != *prevIncrement && increment < PREFS_RAMP_INCREMENTS)
   {
-    ArcadeButton0.SetLowValue(50 - 5*increment);
-    ArcadeButton1.SetLowValue(50 - 5*increment);
+    ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
+    ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
     usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
