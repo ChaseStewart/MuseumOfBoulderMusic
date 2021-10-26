@@ -9,7 +9,7 @@
  *  Tested with Teensy 4.1
  *******************************************************/
 #include <EEPROM.h>
-
+#include "Arduino.h"
 #include "ConfigEEPROM.h"
 
 #define DEBUG_PRINTLN(x)  Serial.println(x)
@@ -21,11 +21,18 @@
 #define TEENSY_LED_PIN 13
 
 /**
+ * Tell this program what to do- if set to true, we will write the values below, else we will just read them
+ */
+const bool rewrite_the_EEPROM = false;
+
+/**
  * START EEPROM preferences to be written
  */
 const uint8_t THIS_STATION_ID = 0x6;
 const uint8_t THIS_MIDI_CHANNEL = 0x6;
 const stationType_t THIS_STATION_TYPE = STATION_TYPE_SWEEP;
+const neoStripInvertState_t INVERT_STATION_1 = NEOSTRIP_INVERT_NO;
+const neoStripInvertState_t INVERT_STATION_2 = NEOSTRIP_INVERT_NO;
 /**
  * END EEPROM preferences to be written
  */
@@ -45,7 +52,7 @@ static void printBanner(void); // Print a serial welcome banner
 /**
  * Add additional EEPROM config values here
  */
-static void updateEEPROM(uint8_t stationID, uint8_t midiChannel);
+static void updateEEPROM(uint8_t stationID, uint8_t midiChannel, stationType_t stationType, neoStripInvertState_t invert1, neoStripInvertState_t invert2);
 
 /**
  * print out all the values from the EEPROM
@@ -62,8 +69,15 @@ void setup()
   while(!Serial);
   
   printBanner();
-  DEBUG_PRINTLN("* Updating EEPROM *");
-  updateEEPROM(THIS_STATION_ID, THIS_MIDI_CHANNEL, THIS_STATION_TYPE );
+  if (rewrite_the_EEPROM)
+  {
+    DEBUG_PRINTLN("* Updating EEPROM *");
+    updateEEPROM(THIS_STATION_ID, THIS_MIDI_CHANNEL, THIS_STATION_TYPE, INVERT_STATION_1, INVERT_STATION_2 );
+  }
+  else
+  {
+    DEBUG_PRINTLN("* Variable \"rewrite_the_EEPROM\" not set, only printing EEPROM values *");
+  }
   DEBUG_PRINTLN();
   DEBUG_PRINTLN("* Printing EEPROM *");
   printEEPROM();
@@ -80,11 +94,13 @@ void loop()
 /**
  * Check and set
  */
-static void updateEEPROM(uint8_t stationID, uint8_t midiChannel, stationType_t stationType)
+static void updateEEPROM(uint8_t stationID, uint8_t midiChannel, stationType_t stationType, neoStripInvertState_t invert1, neoStripInvertState_t invert2)
 {
   EEPROMCheckAndSet(EEPROM_ADDR_STATION_ID, stationID);
   EEPROMCheckAndSet(EEPROM_ADDR_MIDI_CHANNEL, midiChannel);  
   EEPROMCheckAndSet(EEPROM_ADDR_STATION_TYPE, (uint8_t) stationType);  
+  EEPROMCheckAndSet(EEPROM_ADDR_INVERT_NEOSTRIP_1, (uint8_t) invert1);  
+  EEPROMCheckAndSet(EEPROM_ADDR_INVERT_NEOSTRIP_2, (uint8_t) invert2);  
 }
 
 static void printEEPROM(void)

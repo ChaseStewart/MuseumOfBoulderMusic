@@ -100,6 +100,7 @@ typedef struct
   uint8_t presence_cc;
   uint8_t MIDI_Channel;
   stationType_t HW_Type;
+  neoStripInvertState_t invert;
 } config_t;
 
 #endif //__PREFERENCES_H__

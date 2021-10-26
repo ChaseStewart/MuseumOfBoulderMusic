@@ -86,7 +86,7 @@ const neoStickFrame_t whiteArray[16] = {
   {{{100,100,100},{100,100,100},{100,100,100},{100,100,100},{100,100,100},{100,100,100},{100,100,100},{100,100,100}}}
   };
 
-void updateNeoPixelStick(WS2812Serial NeoStick, uint8_t value, stationType_t hwType); // Update LED values based on remaining time 
+void updateNeoPixelStick(WS2812Serial NeoStick, uint8_t value, stationType_t hwType, neoStripInvertState_t invert); // Update LED values based on remaining time 
 
 
 #endif // __NEOPIXEL_H__

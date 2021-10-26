@@ -132,7 +132,8 @@ void setup()
   in_config.thumb_cc     = MIDI_UNDEFINED_2;
   in_config.presence_cc  = MIDI_UNDEFINED_3;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
-  in_config.HW_Type = (stationType_t) EEPROM.read(EEPROM_ADDR_STATION_TYPE);
+  in_config.HW_Type      = (stationType_t) EEPROM.read(EEPROM_ADDR_STATION_TYPE);
+  in_config.invert       = (neoStripInvertState_t) EEPROM.read(EEPROM_ADDR_INVERT_NEOSTRIP_1);
 
   ArcadeButton0.SetMIDIParams(in_config.MIDI_Channel, in_config.button0_cc);
   ArcadeButton1.SetMIDIParams(in_config.MIDI_Channel, in_config.button1_cc);
@@ -318,7 +319,7 @@ static void pingCheck(void)
   if(curr_bend_val != prev_bend_val && abs(curr_bend_val - prev_bend_val) < PREFS_ULTRA_ONEBYTE_MAX_DELTA)
   {
     usbMIDI.sendControlChange(in_config.pbend_cc, curr_bend_val, in_config.MIDI_Channel);
-    updateNeoPixelStick(NeoStick, curr_bend_val, in_config.HW_Type);
+    updateNeoPixelStick(NeoStick, curr_bend_val, in_config.HW_Type, in_config.invert);
   }
 }
 
