@@ -145,7 +145,7 @@ void setup()
   NeoStickRight.show();
   ClearCCs(in_config);
   delay(10000);
-  usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.presence_cc, 0, in_config.MIDI_Channel);
   digitalWrite(TEENSY_LED_PIN, LOW);
   ping_time = millis();
 }
@@ -408,7 +408,8 @@ static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_mi
   {
     ArcadeButton0.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
     ArcadeButton1.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
-    usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
+    int presenceVal = constrain(13 * increment, 0, 127);
+    usbMIDI.sendControlChange(in_config.presence_cc, presenceVal, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
 }
@@ -435,7 +436,8 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
   {
     ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
     ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
-    usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
+    int presenceVal = constrain(127 - (13 * increment), 0, 127);
+    usbMIDI.sendControlChange(in_config.presence_cc, presenceVal, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
 }
@@ -446,7 +448,7 @@ static void ClearCCs(config_t in_config)
   usbMIDI.sendControlChange(in_config.button1_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.pbend_left_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.pbend_right_cc, 0, in_config.MIDI_Channel);
-  usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
+  usbMIDI.sendControlChange(in_config.presence_cc, 0, in_config.MIDI_Channel);
 }
 
 /**
