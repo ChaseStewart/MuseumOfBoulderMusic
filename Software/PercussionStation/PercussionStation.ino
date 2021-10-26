@@ -462,7 +462,8 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
     ArcadeButton5.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
     ArcadeButton6.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
     ArcadeButton7.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
-    usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
+    int presenceVal = constrain(127 - (13 * increment), 0, 127);
+    usbMIDI.sendControlChange(in_config.presence_cc, presenceVal, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
 }
