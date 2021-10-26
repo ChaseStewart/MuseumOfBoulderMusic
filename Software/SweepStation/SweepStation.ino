@@ -125,7 +125,7 @@ void setup()
   in_config.button1_cc     = MIDI_GEN_PURPOSE_2;
   in_config.pbend_left_cc  = MIDI_GEN_PURPOSE_3;
   in_config.pbend_right_cc = MIDI_GEN_PURPOSE_4;
-  in_config.presence_cc    = MIDI_GEN_PURPOSE_5;
+  in_config.presence_cc    = MIDI_GEN_PURPOSE_5; // TODO currently never sent out 
   in_config.MIDI_Channel   = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
   in_config.HW_Type        = (stationType_t) EEPROM.read(EEPROM_ADDR_STATION_TYPE);
 
@@ -408,7 +408,7 @@ static void rampUp(bool *outBool, uint8_t *prevIncrement, unsigned long start_mi
   {
     ArcadeButton0.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
     ArcadeButton1.SetLowValue((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS) * increment);
-    usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
+    //usbMIDI.sendControlChange(in_config.presence_cc, 73 + 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
 }
@@ -435,7 +435,7 @@ static void rampDown(bool *outBool, uint8_t *prevIncrement, unsigned long start_
   {
     ArcadeButton0.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
     ArcadeButton1.SetLowValue(PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE - ((PREFS_ARCADE_BUTTON_PWM_LOW_PRESENCE/PREFS_RAMP_INCREMENTS)*increment));
-    usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
+    //usbMIDI.sendControlChange(in_config.presence_cc, 127 - 6 * increment, in_config.MIDI_Channel);
     *prevIncrement = increment;
   }
 }
@@ -446,7 +446,7 @@ static void ClearCCs(config_t in_config)
   usbMIDI.sendControlChange(in_config.button1_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.pbend_left_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.pbend_right_cc, 0, in_config.MIDI_Channel);
-  usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
+  //usbMIDI.sendControlChange(in_config.presence_cc, 73, in_config.MIDI_Channel);
 }
 
 /**
