@@ -92,10 +92,6 @@ typedef struct
   uint8_t roll_neg_cc;
   uint8_t pitch_pos_cc;
   uint8_t pitch_neg_cc;
-  uint8_t yaw_pos_cc;
-  uint8_t yaw_neg_cc;
-  uint8_t trigger_cc;
-  uint8_t thumb_cc;
   uint8_t pbend_cc;
   uint8_t presence_cc;
   uint8_t MIDI_Channel;

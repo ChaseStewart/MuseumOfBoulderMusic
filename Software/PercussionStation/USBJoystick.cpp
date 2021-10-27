@@ -33,12 +33,8 @@ int user_axis[64];
 int psAxis[64];
 
 
-bool prev_trigger_state = HIGH;
-bool prev_thumb_state = HIGH;
-
 uint8_t prev_roll = 0;
 uint8_t prev_pitch = 0;
-uint8_t prev_yaw = 0;
 
 
 //=============================================================================
@@ -100,27 +96,12 @@ void UpdateJoystick(config_t in_config)
 {
   if (joysticks.available()) 
   {
-    /* Get joystick button state */
-    uint32_t buttons = joysticks.getButtons();
-    uint8_t thumb_state = (uint8_t) (buttons & BUTTON_MASK_THUMB);
-    uint8_t trigger_state = (uint8_t) (buttons & BUTTON_MASK_TRIGGER);
-
     /* Get joystick axis state */
     uint32_t raw_pitch = joysticks.getAxis(JOYSTICK_AXIS_PITCH) / 4;
     uint8_t pitch = (uint8_t) constrain(raw_pitch, 0, 254);
     uint32_t raw_roll = joysticks.getAxis(JOYSTICK_AXIS_ROLL) / 4;
     uint8_t roll = (uint8_t) constrain(raw_roll, 0, 254);
-    uint32_t raw_yaw = joysticks.getAxis(JOYSTICK_AXIS_YAW);
-    uint8_t yaw = (uint8_t) constrain(raw_yaw, 0, 254);
     
-    if (thumb_state != prev_thumb_state)
-    {
-      usbMIDI.sendControlChange(in_config.thumb_cc, (thumb_state) ? PREFS_BUTTON_CC_HIGH_VAL: PREFS_BUTTON_CC_LOW_VAL, in_config.MIDI_Channel);   
-    }
-    if (trigger_state != prev_trigger_state)
-    {
-      usbMIDI.sendControlChange(in_config.trigger_cc, (trigger_state) ? PREFS_BUTTON_CC_HIGH_VAL: PREFS_BUTTON_CC_LOW_VAL, in_config.MIDI_Channel);   
-    }
     if (roll != prev_roll && (roll < PREFS_JOYSTICK_DEADZONE_LOW || roll > PREFS_JOYSTICK_DEADZONE_HIGH))
     {
       if (roll >= 127)
@@ -143,23 +124,9 @@ void UpdateJoystick(config_t in_config)
         usbMIDI.sendControlChange(in_config.pitch_neg_cc, 127 - pitch, in_config.MIDI_Channel);
       }
     }
-    if (yaw != prev_yaw && (yaw < PREFS_JOYSTICK_DEADZONE_LOW || yaw > PREFS_JOYSTICK_DEADZONE_HIGH))
-    {
-      if (yaw >= 127)
-      {
-        usbMIDI.sendControlChange(in_config.yaw_pos_cc, yaw - 127, in_config.MIDI_Channel);
-      }
-      else
-      {
-        usbMIDI.sendControlChange(in_config.yaw_neg_cc, 127 - yaw, in_config.MIDI_Channel);        
-      }
-    }   
     joysticks.joystickDataClear();
 
-    prev_thumb_state = thumb_state;
-    prev_trigger_state = trigger_state;
     prev_roll = roll;
-    prev_yaw = yaw;
     prev_pitch = pitch;
   }
 }
@@ -168,24 +135,15 @@ void UpdateJoystick(config_t in_config)
 bool JoystickIsPressed()
 {
   if (joysticks.available()) 
-  {
-    uint32_t buttons = joysticks.getButtons();
-    
+  {    
     /* Get joystick axis state */
     uint32_t raw_pitch = joysticks.getAxis(JOYSTICK_AXIS_PITCH) / 8;
     uint8_t pitch = (uint8_t) constrain(raw_pitch, 0, 127);
     
     uint32_t raw_roll = joysticks.getAxis(JOYSTICK_AXIS_ROLL) / 8;
     uint8_t roll = (uint8_t) constrain(raw_roll, 0, 127);
-    
-    uint32_t raw_yaw = joysticks.getAxis(JOYSTICK_AXIS_YAW) / 2;
-    uint8_t yaw = (uint8_t) constrain(raw_yaw, 0, 127);
-    
-    return ((0 != joysticks.getButtons()) |  
-                  pitch != prev_pitch |
-                  roll != prev_roll |
-                  yaw != prev_yaw
-           );
+        
+    return (pitch != prev_pitch | roll != prev_roll);
   }
   return false; // if joystick not available
 }

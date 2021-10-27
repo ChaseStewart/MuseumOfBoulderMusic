@@ -126,10 +126,6 @@ void setup()
   in_config.roll_neg_cc  = MIDI_EFFECT_2_DEPTH;
   in_config.pitch_pos_cc = MIDI_EFFECT_3_DEPTH;
   in_config.pitch_neg_cc = MIDI_EFFECT_4_DEPTH;
-  in_config.yaw_pos_cc   = MIDI_EFFECT_5_DEPTH;
-  in_config.yaw_neg_cc   = MIDI_UNDEFINED_0;
-  in_config.trigger_cc   = MIDI_UNDEFINED_1;
-  in_config.thumb_cc     = MIDI_UNDEFINED_2;
   in_config.presence_cc  = MIDI_UNDEFINED_3;
   in_config.MIDI_Channel = EEPROM.read(EEPROM_ADDR_MIDI_CHANNEL);
   in_config.HW_Type = (stationType_t) EEPROM.read(EEPROM_ADDR_STATION_TYPE);
@@ -479,14 +475,10 @@ static void ClearCCs(config_t in_config)
   usbMIDI.sendControlChange(in_config.button6_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.button7_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.pbend_cc, 0, in_config.MIDI_Channel);
-  usbMIDI.sendControlChange(in_config.trigger_cc, 0, in_config.MIDI_Channel);
-  usbMIDI.sendControlChange(in_config.thumb_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.roll_pos_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.roll_neg_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.pitch_pos_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.pitch_neg_cc, 0, in_config.MIDI_Channel);
-  usbMIDI.sendControlChange(in_config.yaw_pos_cc, 0, in_config.MIDI_Channel);
-  usbMIDI.sendControlChange(in_config.yaw_neg_cc, 0, in_config.MIDI_Channel);
   usbMIDI.sendControlChange(in_config.presence_cc, 0, in_config.MIDI_Channel);
 }
 
