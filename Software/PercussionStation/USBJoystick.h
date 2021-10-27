@@ -19,7 +19,6 @@
 
 #define JOYSTICK_AXIS_ROLL  0
 #define JOYSTICK_AXIS_PITCH 1
-#define JOYSTICK_AXIS_YAW   5
 
 /* Class vars */
 extern USBHost myusb;
@@ -37,9 +36,6 @@ extern bool hid_driver_active[];
 extern uint64_t joystick_full_notify_mask;
 extern int psAxis[64];
 extern int user_axis[64];
-
-const uint32_t BUTTON_MASK_TRIGGER = 0x1;
-const uint32_t BUTTON_MASK_THUMB   = 0x2;
 
 
 void PrintDeviceListChanges(void); // Helper function from Paul Stoffregen to print added or removed devices 
