@@ -14,7 +14,8 @@ static void applyFrame(WS2812Serial NeoStick, neoStickFrame_t frame)
 {
   for (int i = 0; i < NeoStick_count; i++)
   {
-    NeoStick.setPixel(i, frame.pixelArray[i].green, frame.pixelArray[i].red, frame.pixelArray[i].blue);
+    // Neostick strips were mounted upside-down
+    NeoStick.setPixel(NeoStick_count-i-1, frame.pixelArray[i].green, frame.pixelArray[i].red, frame.pixelArray[i].blue);
   }
   NeoStick.show();
 }
